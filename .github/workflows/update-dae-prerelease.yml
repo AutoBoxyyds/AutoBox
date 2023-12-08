@@ -59,7 +59,7 @@ jobs:
       run: |
         rm -rf ./Dae-prerelease/*
         rm -f ./tmp/*.service  
-        cp -f ./tmp/dae* ./Dae-prerelease
+        cp -f ./tmp/dae* ./bin/Dae-prerelease
         rm -rf ./tmp
 
     - name: Commit and push
@@ -71,7 +71,7 @@ jobs:
 
     - name: Purge jsDelivr CDN
       run: |
-        cd ./AdGuardHome-prerelease || exit 1
+        cd ./Dae-prerelease || exit 1
         for file in $(ls); do
-          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/AdGuardHome-prerelease/${file}"
+          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/Dae-prerelease/${file}"
         done
