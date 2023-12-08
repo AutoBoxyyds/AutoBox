@@ -17,6 +17,8 @@ on:
       - ".github/workflows/update-clashpremium-release.yml"
       - ".github/workflows/update-dae-prerelease.yml" 
 
+permissions: write-all
+
 env:
   download_url: https://github.com/daeuniverse/dae/releases/download
   download_version: ''
