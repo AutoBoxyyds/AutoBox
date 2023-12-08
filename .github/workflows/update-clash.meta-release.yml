@@ -63,7 +63,7 @@ jobs:
     - name: Commit and push
       run: |
         git config --global user.email "adwidnehu@gmail.com"
-        git config --global user.name "adwidnehu[bot]"
+        git config --global user.name "AutoBoxyyds"
         git add . && git commit -m "更新 Clash.Meta 内核 Release 版至 ${download_version}" || exit 0
         git push -f
 
