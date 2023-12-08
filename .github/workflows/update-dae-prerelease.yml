@@ -46,14 +46,15 @@ jobs:
         archs=(x86_32 armv7 arm64)
         new_name=(amd64 armv7 arm64)
         for((i=0;i<3;i++)); do
-          wget -P ./tmp "${download_url}/${download_version}/dae-linux-${archs[i]}.zip"
-          unzip -o ./tmp/dae-linux-${archs[i]}.zip -d ./tmp
-          mv -f ./tmp/dae-linux-${archs[i]} "./tmp/dae_linux_${new_name[i]}"
-          chmod +x "./tmp/dae_linux_${new_name[i]}"
-          "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/dae_linux_${new_name[i]}"
+          wget -P ./opt "${download_url}/${download_version}/dae-linux-${archs[i]}.zip"
+          unzip -o ./opt/dae-linux-${archs[i]}.zip -d ./top
+          mv -f ./opt/dae-linux-${archs[i]} "./tmp/dae-linux-${new_name[i]}"
+          chmod +x "./tmp/dae-linux-${new_name[i]}"
+          "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/dae-linux-${new_name[i]}"
         done
         rm -f ./tmp/*.zip
         rm -rf ./tmp/upx*
+        rm -rf ./opt
 
     - name: Move `Dae` to `Dae` directory
       run: |
