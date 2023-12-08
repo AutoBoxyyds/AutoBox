@@ -40,8 +40,8 @@ jobs:
       run: |
         download_version=$(curl -sSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep 'tag_name' | sed 's/.*v/v/g' | sed 's/",$//g')
         echo "download_version=${download_version}" >> ${GITHUB_ENV}
-        archs=(amd64-compatible armv5 armv6 armv7 arm64 mips-softfloat mipsle-hardfloat mipsle-softfloat)
-        new_name=(amd64 armv5 armv6 armv7 armv8 mips-softfloat mipsle-hardfloat mipsle-softfloat)
+        archs=(amd64-compatible armv7 arm64)
+        new_name=(amd64 armv7 arm64)
         for((i=0;i<8;i++)); do
           wget "${download_url}/${download_version}/mihomo-linux-${archs[i]}-${download_version}.gz" -O - | gunzip -c > "./tmp/mihomo-linux-${new_name[i]}"
           chmod +x "./tmp/mihomo-linux-${new_name[i]}"
