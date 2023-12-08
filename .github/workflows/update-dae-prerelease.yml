@@ -1,0 +1,75 @@
+name: Update Dae Pre-release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 15 * * *"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - ".github/workflows/delete-old-workflows.yml"
+      - ".github/workflows/update-adguardhome-release.yml"
+      - ".github/workflows/update-clash.meta-alpha.yml"
+      - ".github/workflows/update-clash.meta-release.yml"
+      - ".github/workflows/update-clashdashboard.yml"
+      - ".github/workflows/update-clashpremium-latest.yml"
+      - ".github/workflows/update-clashpremium-release.yml"
+      - ".github/workflows/update-dae-prerelease.yml" 
+
+env:
+  download_url: https://github.com/daeuniverse/dae/releases/download
+  download_version: ''
+
+jobs:
+  Update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone Repository
+      uses: actions/checkout@main
+
+    - name: Download and unzip `upx`
+      run: |
+        mkdir -p ./tmp ./Dae-prerelease
+        upx_version=$(curl -sSL https://api.github.com/repos/upx/upx/releases/latest | grep 'tag_name' | sed 's/.*v//g' | sed 's/",$//g')
+        echo "upx_version=${upx_version}" >> ${GITHUB_ENV}
+        wget -P ./tmp "https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz"
+        tar -xf "./tmp/upx-${upx_version}-amd64_linux.tar.xz" -C ./tmp
+        rm -f ./tmp/*.tar.xz
+
+    - name: Download and compress `Dae`
+      run: |
+        download_version=$(curl -sSL https://api.github.com/repos/daeuniverse/dae/releases | grep 'tag_name' | grep 'v' | head -n 1 | sed 's/.*v/v/g' | sed 's/",$//g')
+        echo "download_version=${download_version}" >> ${GITHUB_ENV}
+        archs=(x86_32 armv7 arm64)
+        new_name=(amd64 armv7 arm64)
+        for((i=0;i<3;i++)); do
+          wget -P ./tmp "${download_url}/${download_version}/dae-linux-${archs[i]}.zip"
+          unzip -o ./tmp/dae-linux-${archs[i]}.zip -d ./tmp
+          mv -f ./tmp/dae-linux-${archs[i]} "./tmp/dae_linux_${new_name[i]}"
+          chmod +x "./tmp/dae_linux_${new_name[i]}"
+          "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/dae_linux_${new_name[i]}"
+        done
+        rm -f ./tmp/*.zip
+        rm -rf ./tmp/upx*
+
+    - name: Move `Dae` to `Dae` directory
+      run: |
+        rm -rf ./Dae-prerelease/*
+        rm -f ./tmp/*.service  
+        cp -f ./tmp/dae* ./Dae-prerelease
+        rm -rf ./tmp
+
+    - name: Commit and push
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git add . && git commit -m "更新 Dae Pre-release 版至 ${download_version}" || exit 0
+        git push -f
+
+    - name: Purge jsDelivr CDN
+      run: |
+        cd ./AdGuardHome-prerelease || exit 1
+        for file in $(ls); do
+          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/AdGuardHome-prerelease/${file}"
+        done
