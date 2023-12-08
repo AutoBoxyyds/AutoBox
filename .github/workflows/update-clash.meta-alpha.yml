@@ -59,7 +59,7 @@ jobs:
     - name: Move `Clash.Meta core` to `Clash.Meta-alpha` directory
       run: |
         rm -rf ./Clash.Meta-alpha/*
-        cp -f ./tmp/* ./Clash.Meta-alpha
+        cp -f ./tmp/* ./bin/Clash.Meta-alpha
         rm -rf ./tmp
 
     - name: Commit and push
