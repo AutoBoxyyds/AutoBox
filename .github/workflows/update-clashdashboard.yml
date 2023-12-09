@@ -45,9 +45,9 @@ jobs:
         echo "Yacd_meta_download_version=${Yacd_meta_download_version}" >> ${GITHUB_ENV}
         echo "metacubexd_download_version=${metacubexd_download_version}" >> ${GITHUB_ENV}
 
-    # - name: Download and compress `clash-dashboard` dashboard
-      # run: |
-        # mkdir -p ./bin/Clash-dashboard ./tmp
+    - name: Download and compress `clash-dashboard` dashboard
+      run: |
+        mkdir -p ./bin/Clash-dashboard ./tmp
         # mkdir -p ./tmp/clash-dashboard
         # curl -o ./tmp/clash-dashboard/gh-pages.zip -L https://github.com/Dreamacro/clash-dashboard/archive/refs/heads/gh-pages.zip
         # unzip -o ./tmp/clash-dashboard/gh-pages.zip -d ./tmp/clash-dashboard
