@@ -9,14 +9,11 @@ on:
     paths-ignore:
       - "README.md"
       - ".github/workflows/delete-old-workflows.yml"
-      - ".github/workflows/update-adguardhome-release.yml"
+      - ".github/workflows/update-dae-prerelease.yml"
       - ".github/workflows/update-clash.meta-alpha.yml"
       - ".github/workflows/update-clash.meta-release.yml"
       - ".github/workflows/update-clashdashboard.yml"
-      - ".github/workflows/update-clashpremium-latest.yml"
-      - ".github/workflows/update-clashpremium-release.yml"
-      - ".github/workflows/update-dae-prerelease.yml" 
-      - ".github/workflows/update-dae-release.yml" 
+      - ".github/workflows/update-mosdns-release.yml"
 
 permissions: write-all
 
@@ -73,5 +70,5 @@ jobs:
       run: |
         cd ./bin/Dae-release || exit 1
         for file in $(ls); do
-          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/Dae-release/${file}"
+          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/bin/Dae-release/${file}"
         done
