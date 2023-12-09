@@ -16,6 +16,8 @@ on:
       - ".github/workflows/update-clashpremium-latest.yml"
       - ".github/workflows/update-clashpremium-release.yml"
 
+permissions: write-all
+
 env:
   # clash_dashboard_download_version: ''
   Razord_meta_download_version: ''
