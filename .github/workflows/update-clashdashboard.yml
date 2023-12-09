@@ -9,12 +9,11 @@ on:
     paths-ignore:
       - "README.md"
       - ".github/workflows/delete-old-workflows.yml"
-      - ".github/workflows/update-adguardhome-prerelease.yml"
-      - ".github/workflows/update-adguardhome-release.yml"
+      - ".github/workflows/update-dae-prerelease.yml"
+      - ".github/workflows/update-dae-release.yml"
       - ".github/workflows/update-clash.meta-alpha.yml"
       - ".github/workflows/update-clash.meta-release.yml"
-      - ".github/workflows/update-clashpremium-latest.yml"
-      - ".github/workflows/update-clashpremium-release.yml"
+      - ".github/workflows/update-mosdns-release.yml"
 
 permissions: write-all
 
