@@ -32,14 +32,14 @@ jobs:
 
     - name: Download and unzip `upx`
       run: |
-        mkdir -p ./tmp ./Dae-prerelease
+        mkdir -p ./tmp ./bin ./bin/Dae-prerelease
         upx_version=$(curl -sSL https://api.github.com/repos/upx/upx/releases/latest | grep 'tag_name' | sed 's/.*v//g' | sed 's/",$//g')
         echo "upx_version=${upx_version}" >> ${GITHUB_ENV}
         wget -P ./tmp "https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz"
         tar -xf "./tmp/upx-${upx_version}-amd64_linux.tar.xz" -C ./tmp
         rm -f ./tmp/*.tar.xz
 
-    - name: Download and compress `Dae`
+    - name: Download and compress `Dae core`
       run: |
         download_version=$(curl -sSL https://api.github.com/repos/daeuniverse/dae/releases | grep 'tag_name' | grep 'v' | head -n 1 | sed 's/.*v/v/g' | sed 's/",$//g')
         echo "download_version=${download_version}" >> ${GITHUB_ENV}
@@ -52,13 +52,12 @@ jobs:
           chmod +x "./tmp/dae-linux-${new_name[i]}"
           "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/dae-linux-${new_name[i]}"
         done
-        rm -f ./tmp/*.zip
         rm -rf ./tmp/upx*
         rm -rf ./opt
 
-    - name: Move `Dae` to `Dae` directory
+    - name: Move `Dae core` to `Dae-prerelease` directory
       run: |
-        rm -rf ./Dae-prerelease/*
+        rm -rf ./bin/Dae-prerelease/*
         cp -f ./tmp/dae* ./bin/Dae-prerelease
         rm -rf ./tmp
 
@@ -66,12 +65,12 @@ jobs:
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
-        git add . && git commit -m "更新 Dae Pre-release 版至 ${download_version}" || exit 0
+        git add . && git commit -m "更新 Dae 内核 Pre-release 版至 ${download_version}" || exit 0
         git push -f
 
     - name: Purge jsDelivr CDN
       run: |
-        cd ./Dae-prerelease || exit 1
+        cd ./bin/Dae-prerelease || exit 1
         for file in $(ls); do
           curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/Dae-prerelease/${file}"
         done
