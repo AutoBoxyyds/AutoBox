@@ -31,7 +31,7 @@ jobs:
 
     - name: Download and unzip `upx`
       run: |
-        mkdir -p ./tmp ./Clash.Meta-release
+        mkdir -p ./tmp ./bin ./bin/Clash.Meta-release
         upx_version=$(curl -sSL https://api.github.com/repos/upx/upx/releases/latest | grep 'tag_name' | sed 's/.*v//g' | sed 's/",$//g')
         echo "upx_version=${upx_version}" >> ${GITHUB_ENV}
         wget -P ./tmp "https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz"
@@ -50,15 +50,11 @@ jobs:
           "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/mihomo-linux-${new_name[i]}"
           mv -f "./tmp/mihomo-linux-${new_name[i]}" "./tmp/clash.meta-linux-${new_name[i]}"
         done
-        wget -P ./tmp "${download_url}/${download_version}/mihomo-windows-amd64-${download_version}.zip"
-        unzip -o "./tmp/mihomo-windows-amd64-${download_version}.zip" -d ./tmp
-        mv -f ./tmp/mihomo-windows-amd64.exe ./tmp/clash.meta-windows-amd64.exe
-        rm -f ./tmp/*.zip
         rm -rf ./tmp/upx*
 
     - name: Move `Clash.Meta core` to `Clash.Meta-release` directory
       run: |
-        rm -rf ./Clash.Meta-release/*
+        rm -rf ./bin/Clash.Meta-release/*
         cp ./tmp/* ./bin/Clash.Meta-release
         rm -rf ./tmp
 
@@ -71,7 +67,7 @@ jobs:
 
     - name: Purge jsDelivr CDN
       run: |
-        cd ./Clash.Meta-release || exit 1
+        cd ./bin/Clash.Meta-release || exit 1
         for file in $(ls); do
           curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/Clash.Meta-release/${file}"
         done
