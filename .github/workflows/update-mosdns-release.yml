@@ -1,0 +1,78 @@
+name: Update Mosdns release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 15 * * *"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - ".github/workflows/delete-old-workflows.yml"
+      - ".github/workflows/update-adguardhome-release.yml"
+      - ".github/workflows/update-clash.meta-alpha.yml"
+      - ".github/workflows/update-clash.meta-release.yml"
+      - ".github/workflows/update-clashdashboard.yml"
+      - ".github/workflows/update-clashpremium-latest.yml"
+      - ".github/workflows/update-clashpremium-release.yml"
+      - ".github/workflows/update-dae-prerelease.yml" 
+      - ".github/workflows/update-dae-release.yml" 
+      - ".github/workflows/update-mosdns-release.yml" 
+
+permissions: write-all
+
+env:
+  download_url: https://github.com/IrineSistiana/mosdns/releases/download
+  download_version: ''
+
+jobs:
+  Update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone Repository
+      uses: actions/checkout@main
+
+    - name: Download and unzip `upx`
+      run: |
+        mkdir -p ./tmp ./bin ./bin/Mosdns-release
+        upx_version=$(curl -sSL https://api.github.com/repos/upx/upx/releases/latest | grep 'tag_name' | sed 's/.*v//g' | sed 's/",$//g')
+        echo "upx_version=${upx_version}" >> ${GITHUB_ENV}
+        wget -P ./tmp "https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz"
+        tar -xf "./tmp/upx-${upx_version}-amd64_linux.tar.xz" -C ./tmp
+        rm -f ./tmp/*.tar.xz
+
+    - name: Download and compress `Mosdns core`
+      run: |
+        download_version=$(curl -sSL https://api.github.com/repos/IrineSistiana/mosdns/releases/latest | grep 'tag_name' | head -n 1 | sed 's/.*v/v/g' | sed 's/",$//g')
+        echo "download_version=${download_version}" >> ${GITHUB_ENV}
+        archs=(amd64 arm-7 arm64)
+        new_name=(amd64 armv7 arm64)
+        for((i=0;i<3;i++)); do
+          wget -P ./opt "${download_url}/${download_version}/mosdns-linux-${archs[i]}.zip"
+          unzip -o ./opt/mosdns-linux-${archs[i]}.zip -d ./opt
+          mv -f ./opt/mosdns-linux-${archs[i]} "./tmp/mosdns-linux-${new_name[i]}"
+          chmod +x "./tmp/mosdns-linux-${new_name[i]}"
+          "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/mosdns-linux-${new_name[i]}"
+        done
+        rm -rf ./tmp/upx*
+        rm -rf ./opt
+
+    - name: Move `Mosdns Core` to `Mosdns-release` directory
+      run: |
+        rm -rf ./bin/Mosdns-release/*
+        cp -f ./tmp/mosdns* ./bin/Mosdns-release
+        rm -rf ./tmp
+
+    - name: Commit and push
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git add . && git commit -m "更新 Mosdns 内核 release 版至 ${download_version}" || exit 0
+        git push -f
+
+    - name: Purge jsDelivr CDN
+      run: |
+        cd ./bin/Mosdns-release || exit 1
+        for file in $(ls); do
+          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/Mosdns-release/${file}"
+        done
