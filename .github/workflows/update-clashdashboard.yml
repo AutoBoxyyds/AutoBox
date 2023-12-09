@@ -47,7 +47,7 @@ jobs:
 
     - name: Download and compress `clash-dashboard` dashboard
       run: |
-        mkdir -p ./bin/Clash-dashboard ./tmp
+        mkdir -p ./bin ./bin/Clash-dashboard ./tmp
         # mkdir -p ./tmp/clash-dashboard
         # curl -o ./tmp/clash-dashboard/gh-pages.zip -L https://github.com/Dreamacro/clash-dashboard/archive/refs/heads/gh-pages.zip
         # unzip -o ./tmp/clash-dashboard/gh-pages.zip -d ./tmp/clash-dashboard
