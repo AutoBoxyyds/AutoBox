@@ -50,7 +50,7 @@ jobs:
         for((i=0;i<3;i++)); do
           wget -P ./opt "${download_url}/${download_version}/mosdns-linux-${archs[i]}.zip"
           unzip -o ./opt/mosdns-linux-${archs[i]}.zip -d ./opt
-          mv -f ./opt/mosdns-linux-${archs[i]} "./tmp/mosdns-linux-${new_name[i]}"
+          mv -f ./opt/mosdns "./tmp/mosdns-linux-${new_name[i]}"
           chmod +x "./tmp/mosdns-linux-${new_name[i]}"
           "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/mosdns-linux-${new_name[i]}"
         done
