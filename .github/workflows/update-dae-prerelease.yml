@@ -58,6 +58,8 @@ jobs:
         rm -rf ./bin/Dae-prerelease/*
         cp -f ./tmp/dae* ./bin/Dae-prerelease
         rm -rf ./tmp
+        sed -i '/Dae-prerelease_v*/'d ./bin/version
+        echo Dae-prerelease_v=${download_version} >> ./bin/version
 
     - name: Commit and push
       run: |
