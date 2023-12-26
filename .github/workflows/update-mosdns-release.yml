@@ -58,6 +58,8 @@ jobs:
         rm -rf ./bin/Mosdns-release/*
         cp -f ./tmp/mosdns* ./bin/Mosdns-release
         rm -rf ./tmp
+        sed -i '/Mosdns-release_v*/'d ./bin/version
+        echo Mosdns-release_v=${download_version} >> ./bin/version
 
     - name: Commit and push
       run: |
