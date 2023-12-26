@@ -58,6 +58,8 @@ jobs:
         rm -rf ./bin/Dae-release/*
         cp -f ./tmp/dae* ./bin/Dae-release
         rm -rf ./tmp
+        sed -i '/Dae-release_v*/'d ./bin/version
+        echo Dae-release_v=${download_version} >> ./bin/version
 
     - name: Commit and push
       run: |
