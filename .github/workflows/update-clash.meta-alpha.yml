@@ -56,8 +56,8 @@ jobs:
         rm -rf ./bin/Clash.Meta-alpha/*
         cp -f ./tmp/* ./bin/Clash.Meta-alpha
         rm -rf ./tmp
-        sed -i '/Clash.Meta-alpha_v*/'d /bin/version
-        echo Clash.Meta-alpha_v=${download_version} >> /bin/version
+        sed -i '/Clash.Meta-alpha_v*/'d ./bin/version
+        echo Clash.Meta-alpha_v=${download_version} >> ./bin/version
 
     - name: Commit and push
       run: |
