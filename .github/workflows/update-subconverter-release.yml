@@ -47,8 +47,8 @@ jobs:
         rm -rf ./bin/Subconverter-release/*
         cp ./tmp/* ./bin/Subconverter-release
         rm -rf ./tmp
-        sed -i '/subconverter-release_v*/'d ./bin/version
-        echo subconverter-release_v=${download_version} >> ./bin/version
+        sed -i '/Subconverter-release_v*/'d ./bin/version
+        echo Subconverter-release_v=${download_version} >> ./bin/version
 
     - name: Commit and push
       run: |
