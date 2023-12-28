@@ -3,7 +3,7 @@ name: Update Subconverter Release
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 57 * * *"
+    - cron: "50 15 * * *"
   push:
     branches:
       - main
