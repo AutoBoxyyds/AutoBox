@@ -1,0 +1,64 @@
+name: Update Subconverter Release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 57 * * *"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - ".github/workflows/delete-old-workflows.yml"
+      - ".github/workflows/update-dae-prerelease.yml"
+      - ".github/workflows/update-dae-release.yml"
+      - ".github/workflows/update-clash.meta-alpha.yml"
+      - ".github/workflows/update-clashdashboard.yml"
+      - ".github/workflows/update-mosdns-release.yml"
+      - ".github/workflows/update-subconverter-release.yml"
+
+
+permissions: write-all
+
+env:
+  download_url: https://github.com/tindy2013/subconverter/releases/download
+  download_version: ''
+
+jobs:
+  Update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone Repository
+      uses: actions/checkout@main
+
+    - name: Download and compress `Subconverter`
+      run: |
+        download_version=$(curl -sL https://api.github.com/repos/tindy2013/subconverter/releases/latest | grep '"tag_name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+        echo "download_version=${download_version}" >> ${GITHUB_ENV}
+        archs=(linux64 armv7 aarch64)
+        new_name=(amd64 armv7 arm64)
+        for((i=0;i<3;i++));do
+          wget -P ./tmp "${download_url}/${download_version}/subconverter_${archs[i]}.tar.gz"
+          mv ./tmp/subconverter_${archs[i]}.tar.gz ./tmp/subconverter-linux-${new_name[i]}.tar.gz
+        done
+
+    - name: Move `Subconverter-release` directory
+      run: |
+        rm -rf ./bin/Subconverter-release/*
+        cp ./tmp/* ./bin/Subconverter-release
+        rm -rf ./tmp
+        sed -i '/subconverter-release_v*/'d ./bin/version
+        echo subconverter-release_v=${download_version} >> ./bin/version
+
+    - name: Commit and push
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git add . && git commit -m "更新 Subconverter 内核 Release 版至 ${download_version}" || exit 0
+        git push -f
+
+    - name: Purge jsDelivr CDN
+      run: |
+        cd ./bin/Subconverter-release || exit 1
+        for file in $(ls); do
+          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/bin/Subconverter-release/${file}"
+        done
