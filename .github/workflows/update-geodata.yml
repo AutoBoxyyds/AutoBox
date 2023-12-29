@@ -18,6 +18,8 @@ on:
 
 permissions: write-all
 
+env:
+  download_version: 'date '+%Y%m%d''
 
 jobs:
   Update:
@@ -51,7 +53,7 @@ jobs:
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
-        git add . && git commit -m "date '+%Y%m%d'" || exit 0
+        git add . && git commit -m "${download_version}" || exit 0
         git push -f
 
     - name: Purge jsDelivr CDN
