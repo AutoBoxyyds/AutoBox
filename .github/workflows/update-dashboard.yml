@@ -1,4 +1,4 @@
-name: Update Clash dashboard
+name: Update dashboard
 on:
   workflow_dispatch:
   schedule:
@@ -11,9 +11,10 @@ on:
       - ".github/workflows/delete-old-workflows.yml"
       - ".github/workflows/update-dae-prerelease.yml"
       - ".github/workflows/update-dae-release.yml"
-      - ".github/workflows/update-clash.meta-alpha.yml"
-      - ".github/workflows/update-clash.meta-release.yml"
+      - ".github/workflows/update-meta-alpha.yml"
+      - ".github/workflows/update-meta-release.yml"
       - ".github/workflows/update-mosdns-release.yml"
+      - ".github/workflows/update-subconverter-release.yml"
 
 permissions: write-all
 
@@ -46,12 +47,12 @@ jobs:
 
     - name: Download and compress `clash-dashboard` dashboard
       run: |
-        mkdir -p ./bin ./bin/Clash-dashboard ./tmp
+        mkdir -p ./bin ./bin/dashboard ./tmp
         # mkdir -p ./tmp/clash-dashboard
         # curl -o ./tmp/clash-dashboard/gh-pages.zip -L https://github.com/Dreamacro/clash-dashboard/archive/refs/heads/gh-pages.zip
         # unzip -o ./tmp/clash-dashboard/gh-pages.zip -d ./tmp/clash-dashboard
         # tar -czf ./tmp/clash-dashboard/clash-dashboard.tar.gz -C ./tmp/clash-dashboard/clash-dashboard-gh-pages .
-        # cp -f ./tmp/clash-dashboard/*.tar.gz ./bin/Clash-dashboard
+        # cp -f ./tmp/clash-dashboard/*.tar.gz ./bin/dashboard
         # rm -rf ./tmp
         # git config --global user.email "github-actions[bot]@users.noreply.github.com"
         # git config --global user.name "github-actions[bot]"
@@ -64,7 +65,7 @@ jobs:
         curl -o ./tmp/Razord-meta/gh-pages.zip -L https://github.com/MetaCubeX/Razord-meta/archive/refs/heads/gh-pages.zip
         unzip -o ./tmp/Razord-meta/gh-pages.zip -d ./tmp/Razord-meta
         tar -czf ./tmp/Razord-meta/Razord-meta.tar.gz -C ./tmp/Razord-meta/Razord-meta-gh-pages .
-        cp -f ./tmp/Razord-meta/*.tar.gz ./bin/Clash-dashboard
+        cp -f ./tmp/Razord-meta/*.tar.gz ./bin/dashboard
         rm -rf ./tmp
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
@@ -77,7 +78,7 @@ jobs:
         curl -o ./tmp/yacd/gh-pages.zip -L https://github.com/haishanh/yacd/archive/refs/heads/gh-pages.zip
         unzip -o ./tmp/yacd/gh-pages.zip -d ./tmp/yacd
         tar -czf ./tmp/yacd/yacd.tar.gz -C ./tmp/yacd/yacd-gh-pages .
-        cp -f ./tmp/yacd/*.tar.gz ./bin/Clash-dashboard
+        cp -f ./tmp/yacd/*.tar.gz ./bin/dashboard
         rm -rf ./tmp
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
@@ -90,7 +91,7 @@ jobs:
         curl -o ./tmp/Yacd-meta/gh-pages.zip -L https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip
         unzip -o ./tmp/Yacd-meta/gh-pages.zip -d ./tmp/Yacd-meta
         tar -czf ./tmp/Yacd-meta/Yacd-meta.tar.gz -C ./tmp/Yacd-meta/Yacd-meta-gh-pages .
-        cp -f ./tmp/Yacd-meta/*.tar.gz ./bin/Clash-dashboard
+        cp -f ./tmp/Yacd-meta/*.tar.gz ./bin/dashboard
         rm -rf ./tmp
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
@@ -103,7 +104,7 @@ jobs:
         curl -o ./tmp/metacubexd/gh-pages.zip -L https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip
         unzip -o ./tmp/metacubexd/gh-pages.zip -d ./tmp/metacubexd
         tar -czf ./tmp/metacubexd/metacubexd.tar.gz -C ./tmp/metacubexd/metacubexd-gh-pages .
-        cp -f ./tmp/metacubexd/*.tar.gz ./bin/Clash-dashboard
+        cp -f ./tmp/metacubexd/*.tar.gz ./bin/dashboard
         rm -rf ./tmp
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
@@ -112,7 +113,7 @@ jobs:
 
     - name: Purge jsDelivr CDN
       run: |
-        cd ./bin/Clash-dashboard || exit 1
+        cd ./bin/dashboard || exit 1
         for file in $(ls); do
-          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/bin/Clash-dashboard/${file}"
+          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/bin/dashboard/${file}"
         done
