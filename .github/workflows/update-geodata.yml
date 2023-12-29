@@ -35,6 +35,7 @@ jobs:
         
     - name: Update Geodata
       run: |
+        mkdir -p ./tmp ./bin ./bin/geodata
         cd \bin
         curl -kfSL -o geodata/china_ip_list.txt https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
         curl -kfSL -o geodata/Country.mmdb https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb
