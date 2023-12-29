@@ -12,11 +12,10 @@ on:
       - ".github/workflows/delete-old-workflows.yml"
       - ".github/workflows/update-dae-prerelease.yml"
       - ".github/workflows/update-dae-release.yml"
-      - ".github/workflows/update-clash.meta-alpha.yml"
-      - ".github/workflows/update-clashdashboard.yml"
+      - ".github/workflows/update-meta-alpha.yml"
+      - ".github/workflows/update-meta-release.yml"
+      - ".github/workflows/update-dashboard.yml"
       - ".github/workflows/update-mosdns-release.yml"
-      - ".github/workflows/update-subconverter-release.yml"
-
 
 permissions: write-all
 
