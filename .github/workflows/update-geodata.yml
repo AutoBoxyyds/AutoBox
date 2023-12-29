@@ -1,4 +1,4 @@
-name: Update geodata
+name: Update Geodata
 on:
   workflow_dispatch:
   schedule:
