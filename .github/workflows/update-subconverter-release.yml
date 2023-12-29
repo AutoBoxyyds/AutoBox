@@ -16,6 +16,7 @@ on:
       - ".github/workflows/update-meta-release.yml"
       - ".github/workflows/update-dashboard.yml"
       - ".github/workflows/update-mosdns-release.yml"
+      - ".github/workflows/update-geodata.yml"
 
 permissions: write-all
 
