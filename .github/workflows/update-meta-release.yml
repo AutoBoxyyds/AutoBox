@@ -1,4 +1,4 @@
-name: Update Clash.Meta Release
+name: Update Meta Release
 on:
   workflow_dispatch:
   schedule:
@@ -11,7 +11,7 @@ on:
       - ".github/workflows/delete-old-workflows.yml"
       - ".github/workflows/update-dae-prerelease.yml"
       - ".github/workflows/update-dae-release.yml"
-      - ".github/workflows/update-clash.meta-alpha.yml"
+      - ".github/workflows/update-meta-alpha.yml"
       - ".github/workflows/update-clashdashboard.yml"
       - ".github/workflows/update-mosdns-release.yml"
 
@@ -30,14 +30,14 @@ jobs:
 
     - name: Download and unzip `upx`
       run: |
-        mkdir -p ./tmp ./bin ./bin/Clash.Meta-release
+        mkdir -p ./tmp ./bin ./bin/Meta-release
         upx_version=$(curl -sSL https://api.github.com/repos/upx/upx/releases/latest | grep 'tag_name' | sed 's/.*v//g' | sed 's/",$//g')
         echo "upx_version=${upx_version}" >> ${GITHUB_ENV}
         wget -P ./tmp "https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz"
         tar -xf "./tmp/upx-${upx_version}-amd64_linux.tar.xz" -C ./tmp
         rm -f ./tmp/*.tar.xz
 
-    - name: Download and compress `Clash.Meta core`
+    - name: Download and compress `Meta core`
       run: |
         download_version=$(curl -sSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep 'tag_name' | sed 's/.*v/v/g' | sed 's/",$//g')
         echo "download_version=${download_version}" >> ${GITHUB_ENV}
@@ -47,28 +47,28 @@ jobs:
           wget "${download_url}/${download_version}/mihomo-linux-${archs[i]}-${download_version}.gz" -O - | gunzip -c > "./tmp/mihomo-linux-${new_name[i]}"
           chmod +x "./tmp/mihomo-linux-${new_name[i]}"
           "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/mihomo-linux-${new_name[i]}"
-          mv -f "./tmp/mihomo-linux-${new_name[i]}" "./tmp/clash.meta-linux-${new_name[i]}"
+          mv -f "./tmp/mihomo-linux-${new_name[i]}" "./tmp/meta-linux-${new_name[i]}"
         done
         rm -rf ./tmp/upx*
 
-    - name: Move `Clash.Meta core` to `Clash.Meta-release` directory
+    - name: Move `Meta core` to `Meta-release` directory
       run: |
-        rm -rf ./bin/Clash.Meta-release/*
-        cp ./tmp/* ./bin/Clash.Meta-release
+        rm -rf ./bin/Meta-release/*
+        cp ./tmp/* ./bin/Meta-release
         rm -rf ./tmp
-        sed -i '/Clash.Meta-release_v*/'d ./bin/version
-        echo Clash.Meta-release_v=${download_version} >> ./bin/version
+        sed -i '/Meta-release_v*/'d ./bin/version
+        echo Meta-release_v=${download_version} >> ./bin/version
 
     - name: Commit and push
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
-        git add . && git commit -m "更新 Clash.Meta 内核 Release 版至 ${download_version}" || exit 0
+        git add . && git commit -m "更新 Meta 内核 Release 版至 ${download_version}" || exit 0
         git push -f
 
     - name: Purge jsDelivr CDN
       run: |
-        cd ./bin/Clash.Meta-release || exit 1
+        cd ./bin/Meta-release || exit 1
         for file in $(ls); do
-          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/bin/Clash.Meta-release/${file}"
+          curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/bin/Meta-release/${file}"
         done
