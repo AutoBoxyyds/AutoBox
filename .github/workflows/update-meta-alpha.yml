@@ -49,7 +49,7 @@ jobs:
           wget "${download_url}/Prerelease-Alpha/mihomo-linux-${archs[i]}-${download_version}.gz" -O - | gunzip -c > "./tmp/mihomo-linux-${new_name[i]}"
           chmod +x "./tmp/mihomo-linux-${new_name[i]}"
           "./tmp/upx-${upx_version}-amd64_linux/upx" "./tmp/mihomo-linux-${new_name[i]}"
-          mv -f "./tmp/mihomo-linux-${new_name[i]}" "./tmp/meta-linux-${new_name[i]}"
+          mv -f "./tmp/mihomo-linux-${new_name[i]}" "./tmp/meta-alpha-linux-${new_name[i]}"
         done
         rm -rf ./tmp/upx*
 
