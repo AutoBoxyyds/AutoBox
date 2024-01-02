@@ -1018,6 +1018,7 @@ install() {
     install_debian
     download_start
     install_meta
+    cp -r ${meta_bin} ${bindir}/meta
     install_meta_alpha
     download_dashboard
     download_yacd
@@ -1071,9 +1072,9 @@ reboot_show_menu() {
 
 checkrestart(){
   echo -----------------------------------------------
-  echo -e "\033[32m检测到已变更的内容，请重启clash服务！\033[0m"
+  echo -e "\033[32m检测到已变更的内容，请重启Meta服务！\033[0m"
   echo -----------------------------------------------
-  read -e -p "是否现在重启clash服务？(1/0) > " res
+  read -e -p "是否现在重启Meta服务？(1/0) > " res
   [ "$res" = 1 ] && restart_meta
 }
 
@@ -1089,14 +1090,14 @@ restart_meta() {
         # ip link show utun  >> /dev/null 2>&1
         check_clash_port
         [ $? -eq 0 ] && break
-        echo -e "${green}正在启动clash，请等待...${end}"
+        echo -e "${green}正在启动Meta，请等待...${end}"
         sleep 3
     done
-      echo -e "${green}Clash服务重启成功!${end}"
+      echo -e "${green}Meta服务重启成功!${end}"
     else
-      echo -e "${red}Clash服务重启失败!${end}"
-      $bindir/clash -t -d $clash_dir
-      echo "$($bindir/clash -t -d $clash_dir)" >> $clash_dir/log
+      echo -e "${red}Meta服务重启失败!${end}"
+      $bindir/meta -t -d $clash_dir
+      echo "$($bindir/meta -t -d $clash_dir)" >> $clash_dir/log
       # $0 stop
       exit 1
     fi
@@ -1232,8 +1233,8 @@ linkconfig(){
     cp -r ${meta_alpha_bin} ${bindir}/clash
     source $clash_configs_dir/start.sh checkyaml
     restart_meta
-    echo -e "${green}Clash代理集配置文件:${yaml}${end}"
-    echo -e "Clash控制面板:${lightblue}http://${local_ip}:${db_port}/ui/${end}"
+    echo -e "${green}Meta代理集配置文件:${yaml}${end}"
+    echo -e "Meta控制面板:${lightblue}http://${local_ip}:${db_port}/ui/${end}"
   elif [ "$num" = 2 ];then
     if [ -f "${auto_dir}"/config.yaml ];then
       cp -r  ${auto_dir}/config.yaml /tmp/clash_config_$USER.yaml
@@ -1425,7 +1426,7 @@ clashcron(){
       if [ -z "$num" ]; then 
         errornum
       elif [ "$num" = 1 ]; then
-        sed -i '$a\*/5 * * * * /usr/local/bin/AutoBox ping >/dev/null 2>&1 #每5分钟检测Clash服务端口' /var/spool/cron/crontabs/root
+        sed -i '$a\*/5 * * * * /usr/local/bin/AutoBox ping >/dev/null 2>&1 #每5分钟检测Meta服务端口' /var/spool/cron/crontabs/root
       elif [ "$num" = 9 ]; then
         crontab -l > /tmp/conf && sed -i "/$cronname/d" /tmp/conf && crontab /tmp/conf
         rm -f /tmp/conf
@@ -1440,7 +1441,7 @@ clashcron(){
 
 meta_getconfig(){
     [ -z "$metacore" ] && metacore=meta-release
-    PID=$(pidof clash)
+    PID=$(pidof meta)
     if [ -n "$PID" ];then
       check_clash_port
       if [ $? -eq 0 ];then
@@ -1461,7 +1462,7 @@ meta_getconfig(){
       fi
     else
       run="${red}没有运行${end}"
-      echo -e "1. ${green}重启 ${end}Clash         "$run""
+      echo -e "1. ${green}重启 ${end}Meta          "$run""
     fi
 }
 
@@ -1523,7 +1524,7 @@ getconfig2(){
     echo -e "\033[30;46m         欢迎使用AutoBox          版本:${sh_ver}${end}"
     check_disk_status
     check_CFG_PATH
-    echo -e "${purple}Clash${end}控制面板:${lightblue}   http://${local_ip}:${db_port}/ui/${end}"
+    echo -e "${purple}Meta${end}控制面板:${lightblue}    http://${local_ip}:${db_port}/ui/${end}"
     check_daed_status
     if [[ $? == 0 ]]; then
     echo -e "${purple}Daed${end}面板:${lightblue}        http://${local_ip}:2023${end}"
@@ -1780,22 +1781,23 @@ set_skip_cert() {
 
 set_meta_core() {
     echo -----------------------------------------------
+    echo -e "${blueb}说明文档${end} https://wiki.metacubex.one"
+    echo -----------------------------------------------
     echo -e "1. ${green}Meta.Release${end}核心"
     echo -e "2. ${green}Meta.Alpha${end}核心"
-    echo -e "${blueb}说明文档${end} https://wiki.metacubex.one"
     echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
     echo -----------------------------------------------
     read -e -p "请输入对应数字 > " num
     if [ "$num" = 1 ];then
       setconfig metacore meta-release
-      rm -rf $bindir/clash
-      cp -r ${meta_bin} ${bindir}/clash
+      rm -rf $bindir/meta
+      cp -r ${meta_bin} ${bindir}/meta
       metacfg
     elif [ "$num" = 2 ];then
       setconfig metacore meta-alpha
-      rm -rf $bindir/clash
-      cp -r ${meta_alpha_bin} ${bindir}/clash
+      rm -rf $bindir/meta
+      cp -r ${meta_alpha_bin} ${bindir}/meta
       metacfg
     elif [ "$num" = 0 ];then
       metacfg
@@ -1910,13 +1912,6 @@ setup_menu() {
     echo -e "${yellow}daed:${end}        http://${local_ip}:2023" 
     echo -e "${yellow}用户名:${end}      AutoBox"
     echo -e "${yellow}密码:${end}        AutoBox2023"
-    echo -----------------------------------------------
-    fi
-    check_adguardhome_status
-    if [[ $? == 0 ]]; then
-    echo -e "${yellow}AdGuardHome:${end}" http://${local_ip}:3000
-    echo -e "${yellow}用户名:${end}      AutoBox"
-    echo -e "${yellow}密码:${end}        AutoBox"
     echo -----------------------------------------------
     fi
     echo -e "${yellow}公网地址:${end}    ${ipv4}"
@@ -2092,7 +2087,7 @@ update_AutoBox_config() {
     fi
 }
 
-update_clash_dashboard () {
+update_meta_dashboard () {
     echo -----------------------------------------------
     echo -e "1. ${green}更新 ${end}dashboard:    ${lightblueb}http://clash.razord.top${end}"
     echo -e "2. ${green}更新 ${end}Razord-meta:  ${lightblueb}http://clash.metacubex.one${end}"
@@ -2124,7 +2119,7 @@ update_clash_dashboard () {
       update_menu
     else
       errornum
-      update_clash_dashboard        
+      update_meta_dashboard        
     fi
 }
 
@@ -2186,7 +2181,7 @@ update_menu() {
     echo -e "4. ${green}更新 ${end}Mosdns:       ${yellow}$(${mosdns_bin} version | awk '{print $1}'| cut -d'-' -f1)${end}     >  ${lightblue}${new_mosdns_version}${end}"
     echo -e "5. ${green}更新 ${end}Subconverter  ${yellow}$(cat ${subconverter_version_file})${end}      >  ${lightblue}${new_subconverter_version}${end}" 
     echo -e "6. ${green}重置 ${end}AutoBox配置文件"
-    echo -e "7. ${green}更新 ${end}Clash面板"
+    echo -e "7. ${green}更新 ${end}Meta面板"
     echo -e "8. ${green}更新 ${end}数据库文件"
     echo -----------------------------------------------
     echo -e "10. ${red}卸载 ${end}AutoBox"
@@ -2221,7 +2216,7 @@ update_menu() {
           update_menu
     ;;
       7)  
-          update_clash_dashboard
+          update_meta_dashboard
           update_menu
     ;;
       8)  
@@ -2283,7 +2278,7 @@ uninstall() {
 
     rm -rf $CFG_PATH
 
-    cronset "Clash服务"
+    cronset "Meta服务"
     cronset "订阅链接"
 
     echo -e "${red}AutoBox 卸载成功!请手动重启系统${end}"

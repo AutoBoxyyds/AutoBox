@@ -120,7 +120,6 @@ checkyaml(){
     echo -----------------------------------------------
     exit 1
   fi
-  fi
   # # #检测并去除无效节点组
   [ -n "$url_type" ] && type xargs >/dev/null 2>&1 && {
   cat $yamlnew | grep -A 8 "\- name:" | xargs | sed 's/- name: /\n/g' | sed 's/ type: .*proxies: /#/g' | sed 's/ rules:.*//g' | sed 's/- //g' | grep -E '#DIRECT $' | awk -F '#' '{print $1}' > /tmp/clash_proxies_$USER
