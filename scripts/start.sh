@@ -329,8 +329,8 @@ tproxy_setup(){
     ip rule add fwmark "$NETFILTER_MARK" lookup "$IPROUTE2_TABLE_ID"  >> /dev/null 2>&1
     nft flush ruleset
     nft -f - << EOF
-    include "/lib/clash/private.nft"
-    include "/lib/clash/chnroute.nft"
+    include "$clashdir/configs/private.nft"
+    include "$clashdir/configs/chnroute.nft"
     table clash {
         chain debug {
             type filter hook prerouting priority 0;
@@ -351,8 +351,8 @@ redir_setup(){
     ip rule add fwmark "$NETFILTER_MARK" lookup "$IPROUTE2_TABLE_ID"  >> /dev/null 2>&1
     nft flush ruleset
     nft -f - << EOF
-    include "/lib/clash/private.nft"
-    include "/lib/clash/chnroute.nft"
+    include "$clashdir/configs/private.nft"
+    include "$clashdir/configs/chnroute.nft"
     table clash {
         chain prerouting {
             type nat hook prerouting priority -100;
@@ -372,8 +372,8 @@ tun_setup(){
     ip rule add fwmark "$NETFILTER_MARK" lookup "$IPROUTE2_TABLE_ID" >> /dev/null 2>&1
     nft flush ruleset
     nft -f - << EOF
-    include "/lib/clash/private.nft"
-    include "/lib/clash/chnroute.nft"
+    include "$clashdir/configs/private.nft"
+    include "$clashdir/configs/chnroute.nft"
     table clash {
         chain debug {
             type filter hook prerouting priority 0; policy accept;
@@ -398,8 +398,8 @@ redir_tun_setup(){
     ip rule add fwmark "$NETFILTER_MARK" lookup "$IPROUTE2_TABLE_ID" >> /dev/null 2>&1
     nft flush ruleset
     nft -f - << EOF
-    include "/lib/clash/private.nft"
-    include "/lib/clash/chnroute.nft"
+    include "$clashdir/configs/private.nft"
+    include "$clashdir/configs/chnroute.nft"
     table clash {
         chain prerouting {
             type nat hook prerouting priority -100; policy accept;
