@@ -16,7 +16,8 @@ on:
       - ".github/workflows/update-mosdns-release.yml"
       - ".github/workflows/update-subconverter-release.yml"
       - ".github/workflows/update-geodata.yml"
-
+      - ".github/workflows/update-adguardhome-release.yml"
+      
 permissions: write-all
 
 env:
