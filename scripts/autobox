@@ -61,9 +61,9 @@ subconverter_version_file=$sub_dir/version_subconverter
 formyairport_path=$sub_dir/profiles/formyairport.ini
 
 ######### AdGuardhome #########
-adg_dir="${auto_dir}/adguardhome"
-adg_bin="${adg_dir}/AdGuardHome"
-adguardhome_version_file="${adg_dir}/version_adguardhome"
+adg_dir=${auto_dir}/adguardhome && [ ! -f $adg_dir ] && mkdir -p $adg_dir
+adg_bin=${adg_dir}/AdGuardHome
+adguardhome_version_file=${adg_dir}/version_adguardhome
 
 setconfig(){
     #参数1代表变量名，参数2代表变量值,参数3即文件路径
@@ -393,15 +393,16 @@ install_meta () {
 }
   
 update_meta_core() {
-    # local_meta_version=$(cat "${meta_version_file}")
-    local_meta_version=$(${meta_bin} -v | awk 'NR==1{print $3}')
-    echo -e "${green}Local Meta alpha: ${local_meta_version}.${end}"
-
+    local_meta_version=$(cat "${meta_version_file}")
+    # local_meta_version=$(${meta_bin} -v | awk 'NR==1{print $3}')
     remote_meta_version=$(cat ${auto_dir}/version  | grep Meta-release_v | awk -F'=' '{ print $2 }')
+    echo -e "${green}Local Meta alpha: ${local_meta_version}.${end}"
     if (verlt "${local_meta_version}" "${remote_meta_version}") then
       echo -e "${green}Found a new version of Meta ${remote_meta_version}${end}"
+      read -e -p "是否更新？(1/0) > " res
+      [ "$res" = 0 ] && update_menu
     else
-      echo -e "${green}Meta ${local_meta_version} is up to date${end}"
+      echo -e "${green}Meta is up to date${end}"
       before_show_menu
     fi
     install_meta
@@ -433,21 +434,34 @@ install_meta_alpha () {
 }
 
 update_meta_alpha_core() {
-    # local_meta_alpha_version=$(cat "${meta_alpha_version_file}")
-    local_meta_alpha_version=$(${meta_alpha_bin} -v | awk 'NR==1{print $3}')
-    echo -e "${green}Local Meta alpha: ${local_meta_alpha_version}.${end}"
-
+    local_meta_alpha_version=$(cat "${meta_alpha_version_file}")
+    # local_meta_alpha_version=$(${meta_alpha_bin} -v | awk 'NR==1{print $3}')
     remote_meta_alpha_version=$(cat ${auto_dir}/version  | grep Meta-alpha_v | awk -F'=' '{ print $2 }')
-    if (verlt "${local_meta_alpha_version}" "${remote_meta_alpha_version}") then
-      echo -e "${green}Found a new version of Meta Alpha ${remote_meta_alpha_version}${end}"
-    else
-      echo -e "${green}Meta Alpha ${local_meta_alpha_version} is up to date${end}"
-      before_show_menu
-    fi
-    install_meta_alpha
-    echo "${remote_meta_alpha_version}" > "${meta_alpha_version_file}"
-    echo -e "${green}Meta Alpha has been updated${end}"
-    restart_meta
+    echo -e "${green}Local Meta alpha: ${local_meta_alpha_version}.${end}"
+    echo -e "${green}remote Meta alpha: ${remote_meta_alpha_version}.${end}"
+    read -e -p "是否更新？(1/0) > " res
+      if [ "$res" = '1' ]; then
+        install_meta_alpha
+        echo "${remote_meta_alpha_version}" > "${meta_alpha_version_file}"
+        echo -e "${green}Meta Alpha has been updated${end}"
+        restart_meta
+      elif [ "$res" = '0' ]; then
+        update_menu
+      else
+        errornum
+      fi
+    # if (verlt "${local_meta_alpha_version}" "${remote_meta_alpha_version}") then
+    #   echo -e "${green}Found a new version of Meta Alpha ${remote_meta_alpha_version}${end}"
+    #   read -e -p "是否更新？(1/0) > " res
+    #   [ "$res" = 0 ] && update_menu
+    # else
+    #   echo -e "${green}Meta Alpha is up to date${end}"
+    #   before_show_menu
+    # fi
+    # install_meta_alpha
+    # echo "${remote_meta_alpha_version}" > "${meta_alpha_version_file}"
+    # echo -e "${green}Meta Alpha has been updated${end}"
+    # restart_meta
 }
 
 download_dashboard () {
@@ -571,15 +585,16 @@ install_mosdns() {
 }
 
 update_mosdns_core() {
-    # local_meta_version=$(cat "${mosdns_version_file}")
-    local_meta_version=$(${mosdns_bin} version | awk '{print $1}'| cut -d'-' -f1)
-    echo -e "${green}Local Mosdns: ${local_meta_version}.${end}"
-
+    local_meta_version=$(cat "${mosdns_version_file}")
+    # local_meta_version=$(${mosdns_bin} version | awk '{print $1}'| cut -d'-' -f1)
     remote_meta_version=$(cat ${auto_dir}/version  | grep Mosdns-release_v | awk -F'=' '{ print $2 }')
+    echo -e "${green}Local Mosdns: ${local_meta_version}.${end}"
     if (verlt "${local_meta_version}" "${remote_meta_version}") then
       echo -e "${green}Found a new version of Mosdns ${remote_meta_version}${end}"
+      read -e -p "是否更新？(1/0) > " res
+      [ "$res" = 0 ] && update_menu
     else
-      echo -e "${green}Mosdns ${local_meta_version} is up to date${end}"
+      echo -e "${green}Mosdns is up to date${end}"
       before_show_menu
     fi
     install_mosdns
@@ -709,51 +724,50 @@ EOF
 }
 
 update_subconverter_core() {
+    getcpucore
     local_subconverter_version=$(cat "${subconverter_version_file}")
     remote_subconverter_version=$(cat ${auto_dir}/version  | grep Subconverter-release_v | awk -F'=' '{ print $2 }')
+    echo -e "${green}Local AdGuardhome: ${local_subconverter_version}.${end}"
     if (verlt "${local_subconverter_version}" "${remote_subconverter_version}") then
-      echo -e "${green}Found a new version of Subconverter${end}"
+      echo -e "${green}Found a new version of Subconverter ${remote_subconverter_version}${end}"
+      read -e -p "是否更新？(1/0) > " res
+      [ "$res" = 0 ] && update_menu
     else
-      echo -e "${green}Subconverter ${local_subconverter_version} is up to date${end}"
+      echo -e "${green}Subconverter is up to date${end}"
       before_show_menu
     fi
-    getcpucore
-    subconverter_download_url="${update_url}/bin/Subconverter-release/subconverter-${cpucore_sub}.tar.gz"
+    subconverter_download_url="${update_url}/bin/Subconverter-release/subconverter-${cpucore}.tar.gz"
     echo -e "${green}Start download Subconverter from ${subconverter_download_url}${end}" 
+    [ -d "/tmp/subconverter" ] && rm -rf "/tmp/subconverter"
+    mkdir "/tmp/subconverter"
     webget2 /tmp/subconverter/subconverter.tar.gz ${url_cdn}${subconverter_download_url}
     if [ ! -f "/tmp/subconverter/subconverter.tar.gz" ]; then
         echo -e "${red}Failed to download Subconverter${end}"
         exit 1
     fi
-
-    [ -d "/tmp/subconverter" ] && rm -rf "/tmp/subconverter"
-    mkdir "/tmp/subconverter"
     cd /tmp
-    tar -zxvf /tmp/subconverter.tar.gz >> /dev/null 2>&1
+    tar -zxvf /tmp/subconverter/subconverter.tar.gz >> /dev/null 2>&1
     if [ $? -ne 0 ]; then
       echo -e "${red}Failed to tar subconverter.tar.gz${end}"
-      rm /tmp/subconverter.tar.gz
       rm -rf /tmp/subconverter
       exit 1
     fi
-    rm /tmp/subconverter.tar.gz
     [ -d "${sub_bin}" ] && rm -rf "${sub_bin}"
-    mv subconverter/subconverter ${sub_bin}
+    mv /tmp/subconverter/subconverter ${sub_bin}
     chmod +x ${sub_bin}
     rm -rf /tmp/subconverter
-
     echo "${remote_subconverter_version}" > "${subconverter_version_file}"
     echo -e "${green}Subconverter has been updated${end}"
     restart_subconverter
 }
 
 install_adguardhome () {
-    adguardhome_download_url="${update_url}/bin/adguardhome/AdGuardHome-${cpucore}"
-    remote_adguardhome_version="$(wget -qO- ${url_cdn}${update_url}/bin/version | grep AdGuardhome-release_v | awk -F'=' '{ print $2 }')"
+    adguardhome_download_url="${update_url}/bin/AdGuardHome-release/AdGuardHome-${cpucore}"
+    remote_adguardhome_version="$(wget -qO- ${url_cdn}${update_url}/bin/version | grep AdGuardHome-release_v | awk -F'=' '{ print $2 }')"
     echo -e "${green}Start download AdGuardHome from ${adguardhome_download_url}${end}" 
     webget2 /tmp/AdGuardHome ${url_cdn}${adguardhome_download_url}
     rm -rf ${adg_bin}
-    mv /tmp/AdGuardHome ${adg_dir}
+    mv /tmp/AdGuardHome ${adg_bin}
     chmod +x ${adg_bin}
     if [ ! -f "${adguardhome_version_file}" ]; then
       echo 0 > ${adguardhome_version_file}
@@ -771,12 +785,15 @@ install_adguardhome () {
 update_adguardhome_core () {
     getcpucore
     local_adguardhome_version=$(cat "${adguardhome_version_file}")
-    echo -e "${green}Local AdGuardhome: ${local_adguardhome_version}.${end}"
+    # local_adguardhome_version=$(${adg_bin} --version | awk '{print $4}'| cut -d'-' -f1)
     remote_adguardhome_version=$(cat ${auto_dir}/version  | grep AdGuardHome-release_v | awk -F'=' '{ print $2 }')
+    echo -e "${green}Local AdGuardhome: ${local_adguardhome_version}.${end}"
     if (verlt "${local_adguardhome_version}" "${remote_adguardhome_version}") then
-      echo -e "${green}Found a new version of AdGuardHome${end}"
+      echo -e "${green}Found a new version of AdGuardHome ${remote_adguardhome_version}${end}"
+      read -e -p "是否更新？(1/0) > " res
+      [ "$res" = 0 ] && update_menu
     else
-      echo -e "${green}AdGuardHome ${local_adguardhome_version} is up to date${end}"
+      echo -e "${green}AdGuardHome is up to date${end}"
       before_show_menu
     fi
     install_adguardhome
@@ -2304,17 +2321,17 @@ update_menu() {
     new_meta_alpha_version=$(cat ${auto_dir}/version  | grep Meta-alpha_v | awk -F'=' '{ print $2 }')
     new_mosdns_version=$(cat ${auto_dir}/version  | grep Mosdns-release_v | awk -F'=' '{ print $2 }')
     new_subconverter_version=$(cat ${auto_dir}/version  | grep Subconverter-release_v | awk -F'=' '{ print $2 }')
-    new_adguardhome_version=$(cat ${auto_dir}/version  | grep adguardhome_v | awk -F'=' '{ print $2 }')
+    new_adguardhome_version=$(cat ${auto_dir}/version  | grep AdGuardHome-release_v | awk -F'=' '{ print $2 }')
     new_AutoBox_version=$(cat ${auto_dir}/version  | grep -oE 'version=.*' | awk -F'=' '{ print $2 }')
     echo -----------------------------------------------
     echo -e "\033[30;43m欢迎使用更新/卸载功能${end}"
     echo -----------------------------------------------
-    echo -e "1. ${green}更新 ${end}AutoBox       ${yellow}${sh_ver}${end}           >  ${lightblue}${new_AutoBox_version}${end}"
-    echo -e "2. ${green}更新 ${end}Meta.Release: ${yellow}$(${meta_bin} -v | awk 'NR==1{print $3}')${end}       >  ${lightblue}${new_meta_version}${end}"
-    echo -e "3. ${green}更新 ${end}Meta.Alpha:   ${yellow}$(${meta_alpha_bin} -v | awk 'NR==1{print $3}')${end} >  ${lightblue}${new_meta_alpha_version}${end}"
-    echo -e "4. ${green}更新 ${end}Mosdns:       ${yellow}$(${mosdns_bin} version | awk '{print $1}'| cut -d'-' -f1)${end}        >  ${lightblue}${new_mosdns_version}${end}"
-    echo -e "5. ${green}更新 ${end}Subconverter  ${yellow}$(cat ${subconverter_version_file})${end}        >  ${lightblue}${new_subconverter_version}${end}" 
-    echo -e "6. ${green}更新 ${end}AdGuardHome   ${yellow}$(${adg_bin} --version | awk '{print $4}'| cut -d'-' -f1)${end}  >  ${lightblue}${new_adguardhome_version}${end}" 
+    echo -e "1. ${green}更新 ${end}AutoBox      ${yellow}${sh_ver}${end}           >  ${lightblue}${new_AutoBox_version}${end}"
+    echo -e "2. ${green}更新 ${end}Meta.Release ${yellow}$(${meta_bin} -v | awk 'NR==1{print $3}')${end}       >  ${lightblue}${new_meta_version}${end}"
+    echo -e "3. ${green}更新 ${end}Meta.Alpha   ${yellow}$(${meta_alpha_bin} -v | awk 'NR==1{print $3}')${end} >  ${lightblue}${new_meta_alpha_version}${end}"
+    echo -e "4. ${green}更新 ${end}Mosdns       ${yellow}$(${mosdns_bin} version | awk '{print $1}'| cut -d'-' -f1)${end}        >  ${lightblue}${new_mosdns_version}${end}"
+    echo -e "5. ${green}更新 ${end}Subconverter ${yellow}$(cat ${subconverter_version_file})${end}        >  ${lightblue}${new_subconverter_version}${end}" 
+    echo -e "6. ${green}更新 ${end}AdGuardHome  ${yellow}$(${adg_bin} --version | awk '{print $4}'| cut -d'-' -f1)${end}     >  ${lightblue}${new_adguardhome_version}${end}" 
     echo -e "7. ${green}重置 ${end}AutoBox配置文件"
     echo -e "8. ${green}更新 ${end}Meta面板"
     echo -e "9. ${green}更新 ${end}数据库文件"
@@ -2420,7 +2437,7 @@ uninstall() {
     rm -rf $clash_configs_dir
 
     rm -rf ${auto_dir}/version
-    rm -rf ${autobin_dir}/AutoBox
+    rm -rf ${autobin_dir}/Autobox
 
     rm -rf $CFG_PATH
 
