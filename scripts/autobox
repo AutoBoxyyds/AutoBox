@@ -1134,7 +1134,7 @@ install() {
     install_adguardhome
     download_adguardhome_config
     install_nftables
-    install_cron
+    # install_cron
     echo "version ${sh_ver}" >> ${auto_dir}/version
     echo -----------------------------------------------
     echo -e "\033[30;46mAutoBox 安装成功 版本:${sh_ver}${end}"
@@ -1543,23 +1543,6 @@ clashcron(){
       cronname=更新AutoBox服务版本
       cronset="/usr/local/bin/AutoBox check_ver"
       setcron 
-      echo -----------------------------------------------
-      echo -e " 输入   1   确认设置:${green}$cronname${end}定时任务"
-      echo -----------------------------------------------
-      echo -e " 输入   9   ${red}删除定时任务${end}"
-      echo -e " 输入   0   返回上级菜单"
-      echo -----------------------------------------------
-      read -e -p "请输入对应数字 > " num
-      if [ -z "$num" ]; then 
-        errornum
-      elif [ "$num" = 1 ]; then
-        sed -i '$a\*/5 * * * * /usr/local/bin/AutoBox ping >/dev/null 2>&1 #每5分钟检测Meta服务端口' /var/spool/cron/crontabs/root
-      elif [ "$num" = 9 ]; then
-        crontab -l > /tmp/conf && sed -i "/$cronname/d" /tmp/conf && crontab /tmp/conf
-        rm -f /tmp/conf
-        echo -----------------------------------------------
-        echo -e "${red}定时任务:$cronname已删除!${end}"
-      fi
       clashcron
     else
       errornum
