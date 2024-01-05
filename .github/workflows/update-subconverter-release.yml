@@ -17,6 +17,7 @@ on:
       - ".github/workflows/update-dashboard.yml"
       - ".github/workflows/update-mosdns-release.yml"
       - ".github/workflows/update-geodata.yml"
+      - ".github/workflows/update-adguardhome-release.yml"
 
 permissions: write-all
 
