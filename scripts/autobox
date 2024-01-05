@@ -60,6 +60,11 @@ sub_bin=$sub_dir/subconverter
 subconverter_version_file=$sub_dir/version_subconverter
 formyairport_path=$sub_dir/profiles/formyairport.ini
 
+######### AdGuardhome #########
+adg_dir="${auto_dir}/adguardhome"
+adg_bin="${adg_dir}/AdGuardHome"
+adguardhome_version_file="${adg_dir}/version_adguardhome"
+
 setconfig(){
     #参数1代表变量名，参数2代表变量值,参数3即文件路径
     [ -z "$3" ] && configpath=$CFG_PATH || configpath=$3
@@ -335,6 +340,35 @@ WantedBy=multi-user.target
 EOF
 }
 
+set_adguardhome_service() {
+    cat << EOF > /etc/systemd/system/adguardhome.service
+[Unit]
+Description=AdGuard Home: Network-level blocker
+ConditionFileIsExecutable=${sub_bin}
+
+After=syslog.target network-online.target 
+
+[Service]
+StartLimitInterval=5
+StartLimitBurst=10
+ExecStartPre=/bin/mkdir -p /var/log/
+ExecStart=${adg_bin} "-s" "run"
+
+WorkingDirectory=${adg_dir}
+
+StandardOutput=file:/var/log/AdGuardHome.out
+StandardError=file:/var/log/AdGuardHome.err
+
+Restart=always
+
+RestartSec=10
+EnvironmentFile=-/etc/sysconfig/AdGuardHome
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
 install_meta () {
     getcpucore
     meta_download_url="${update_url}/bin/Meta-release/meta-${cpucore}"
@@ -367,7 +401,7 @@ update_meta_core() {
     if (verlt "${local_meta_version}" "${remote_meta_version}") then
       echo -e "${green}Found a new version of Meta ${remote_meta_version}${end}"
     else
-      echo -e "${green}Meta is up to date${end}"
+      echo -e "${green}Meta ${local_meta_version} is up to date${end}"
       before_show_menu
     fi
     install_meta
@@ -407,7 +441,7 @@ update_meta_alpha_core() {
     if (verlt "${local_meta_alpha_version}" "${remote_meta_alpha_version}") then
       echo -e "${green}Found a new version of Meta Alpha ${remote_meta_alpha_version}${end}"
     else
-      echo -e "${green}Meta Alpha is up to date${end}"
+      echo -e "${green}Meta Alpha ${local_meta_alpha_version} is up to date${end}"
       before_show_menu
     fi
     install_meta_alpha
@@ -545,7 +579,7 @@ update_mosdns_core() {
     if (verlt "${local_meta_version}" "${remote_meta_version}") then
       echo -e "${green}Found a new version of Mosdns ${remote_meta_version}${end}"
     else
-      echo -e "${green}Mosdns is up to date${end}"
+      echo -e "${green}Mosdns ${local_meta_version} is up to date${end}"
       before_show_menu
     fi
     install_mosdns
@@ -554,7 +588,7 @@ update_mosdns_core() {
 }
 
 download_mosdns_config () {
-    config_download_url="${update_url}/public/config-mosdns.yaml"
+    config_download_url="${update_url}/file/config-mosdns.yaml"
     echo -e "${green}Start download Mosdns Config.yaml from ${config_download_url}${end}" 
     webget2  /tmp/config.yaml  ${url_cdn}${config_download_url}
     if [ -f "/tmp/config.yaml" ]; then
@@ -676,12 +710,11 @@ EOF
 
 update_subconverter_core() {
     local_subconverter_version=$(cat "${subconverter_version_file}")
-    echo -e "${green}Local Subconverter: ${local_subconverter_version}.${end}"
     remote_subconverter_version=$(cat ${auto_dir}/version  | grep Subconverter-release_v | awk -F'=' '{ print $2 }')
     if (verlt "${local_subconverter_version}" "${remote_subconverter_version}") then
       echo -e "${green}Found a new version of Subconverter${end}"
     else
-      echo -e "${green}Subconverter is up to date${end}"
+      echo -e "${green}Subconverter ${local_subconverter_version} is up to date${end}"
       before_show_menu
     fi
     getcpucore
@@ -714,11 +747,61 @@ update_subconverter_core() {
     restart_subconverter
 }
 
+install_adguardhome () {
+    adguardhome_download_url="${update_url}/bin/adguardhome/AdGuardHome-${cpucore}"
+    remote_adguardhome_version="$(wget -qO- ${url_cdn}${update_url}/bin/version | grep AdGuardhome-release_v | awk -F'=' '{ print $2 }')"
+    echo -e "${green}Start download AdGuardHome from ${adguardhome_download_url}${end}" 
+    webget2 /tmp/AdGuardHome ${url_cdn}${adguardhome_download_url}
+    rm -rf ${adg_bin}
+    mv /tmp/AdGuardHome ${adg_dir}
+    chmod +x ${adg_bin}
+    if [ ! -f "${adguardhome_version_file}" ]; then
+      echo 0 > ${adguardhome_version_file}
+    fi
+    echo "${remote_adguardhome_version}" > "${adguardhome_version_file}"
+    if [ ! -f /etc/systemd/system/adguardhome.service ]; then
+    set_adguardhome_service
+    systemctl daemon-reload >> /tmp/autoclash_setup.log 2>&1
+    systemctl start adguardhome.service >> /tmp/autoclash_setup.log 2>&1
+    systemctl enable adguardhome >> /tmp/autoclash_setup.log 2>&1
+    fi
+    echo -e "${yellow}AdGuardHome successfully installed${end}"
+}
+
+update_adguardhome_core () {
+    getcpucore
+    local_adguardhome_version=$(cat "${adguardhome_version_file}")
+    echo -e "${green}Local AdGuardhome: ${local_adguardhome_version}.${end}"
+    remote_adguardhome_version=$(cat ${auto_dir}/version  | grep AdGuardHome-release_v | awk -F'=' '{ print $2 }')
+    if (verlt "${local_adguardhome_version}" "${remote_adguardhome_version}") then
+      echo -e "${green}Found a new version of AdGuardHome${end}"
+    else
+      echo -e "${green}AdGuardHome ${local_adguardhome_version} is up to date${end}"
+      before_show_menu
+    fi
+    install_adguardhome
+    echo -e "${green}AdGuardHome has been updated${end}"
+    restart_adguardhome
+}
+
+download_adguardhome_config () {
+    config_download_url="${update_url}/file/AdGuardHome.yaml"
+    echo -e "${green}Start download AdGuardHome AdGuardHome.yaml from ${config_download_url}${end}" 
+    webget2  /tmp/AdGuardHome.yaml  ${url_cdn}${config_download_url}
+    if [ -f "/tmp/AdGuardHome.yaml" ]; then
+      [ -f "${adg_dir}/AdGuardHome.yaml" ] && rm -rf "${adg_dir}/AdGuardHome.yaml"
+      mv /tmp/AdGuardHome.yaml ${adg_dir}/AdGuardHome.yaml
+    else
+      echo -e "${red}Failed to download AdGuardHome AdGuardHome.yaml${end}"
+      exit 1
+    fi
+}
+
 update_shell() {
     new_shell_ver=$(wget -qO- ${url_cdn}${update_url}/bin/version | grep version | awk -F'=' '{ print $2 }')
     new_shell_auto=${update_url}/scripts/autobox
     echo -e "${green}Start download AutoBox v$new_shell_ver from ${new_shell_auto}${end}" 
-    webget2 /tmp/AutoBox ${url_cdn}${new_shell_auto}
+    webget2 ${TMPDIR}/autobox ${url_cdn}${new_shell_auto}
     if [[ $? -ne 0 ]]; then
       echo -e "${red}AutoBox下载失败!${end}"
       exit 1
@@ -726,7 +809,7 @@ update_shell() {
     download_start
     echo -e "`date +%F\ %T` AutoBox v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
     rm -rf ${autobin_dir}/AutoBox   
-    mv /tmp/AutoBox ${autobin_dir}/AutoBox  >> /dev/null 2>&1
+    mv ${TMPDIR}/autobox ${autobin_dir}/AutoBox  >> /dev/null 2>&1
     chmod +x ${autobin_dir}/AutoBox >> /dev/null 2>&1
     echo -e "${green}AutoBox v${new_shell_ver}强制升级成功，请重新运行脚本!${end}" && exit 0
 }
@@ -734,13 +817,13 @@ update_shell() {
 download_start() {
     rules_download_url="${update_url}/scripts/start.sh"
     echo -e "${green}Start download start.sh from ${rules_download_url}${end}" 
-    webget2  /tmp/start.sh  ${url_cdn}${rules_download_url}
-    if [ ! -f "/tmp/start.sh" ]; then
+    webget2  ${TMPDIR}/start.sh  ${url_cdn}${rules_download_url}
+    if [ ! -f "${TMPDIR}/start.sh" ]; then
       echo -e "${red}Failed to download start.sh${end}"
       exit 1
     fi
     rm -rf $clash_configs_dir/start.sh 
-    mv /tmp/start.sh $clash_configs_dir/start.sh
+    mv ${TMPDIR}/start.sh $clash_configs_dir/start.sh
     chmod +x $clash_configs_dir/start.sh
 }
 
@@ -800,7 +883,7 @@ check_ver() {
     webget2 /${auto_dir}/version ${url_cdn}${update_url}/bin/version echooff
 }
 
-check_clash_port() {
+check_meta_port() {
     source $CFG_PATH
     pIDa=`lsof -i :${db_port}|grep -v "PID" | awk '{print $2}'`
     if [ "$pIDa" = "" ];then
@@ -843,7 +926,7 @@ redir_mod=TProxy模式
 # dns_mod:meta的DNS模式		[fake-ip,redir_host]
 dns_mod=fake-ip
 # mix_port:HTTP(S) 和 SOCKS 代理混合端口
-mix_port=7891
+mix_port=7890
 # mosdns_ver:Mosdns版本	[MosdnsV5,EasyMosdns]
 mosdns_ver=MosdnsV5
 # disoverride:配置文件覆写	[未禁用,已禁用]
@@ -1031,6 +1114,8 @@ install() {
     download_geoip
     download_geosite
     install_subconverter
+    install_adguardhome
+    download_adguardhome_config
     install_nftables
     install_cron
     echo "version ${sh_ver}" >> ${auto_dir}/version
@@ -1088,7 +1173,7 @@ restart_meta() {
     if [[ $? == 0 ]]; then
     while true; do
         # ip link show utun  >> /dev/null 2>&1
-        check_clash_port
+        check_meta_port
         [ $? -eq 0 ] && break
         echo -e "${green}正在启动Meta，请等待...${end}"
         sleep 3
@@ -1134,6 +1219,20 @@ restart_subconverter() {
     # fi
 }
 
+restart_adguardhome() {
+    systemctl restart adguardhome.service >> /dev/null 2>&1
+    sleep 2
+    check_adguardhome_status
+    if [[ $? == 0 ]]; then
+      echo -e "${green}AdGuardHome服务重启成功!${end}"
+    else
+      echo -e "${red}AdGuardHome服务重启失败!${end}"
+    fi
+    # if [[ $# == 0 ]]; then
+    #   before_show_menu
+    # fi
+}
+
 restart_daed() {
     systemctl restart daed >> /dev/null 2>&1
     sleep 2
@@ -1154,6 +1253,8 @@ restart_all() {
     systemctl restart mosdns >> /dev/null 2>&1
     sleep 2
     systemctl restart subconverter >> /dev/null 2>&1
+    sleep 2
+    systemctl restart adguardhome >> /dev/null 2>&1
     sleep 2
     systemctl restart daed >> /dev/null 2>&1
     echo -e "${green}AutoBox 重启成功!${end}"
@@ -1179,6 +1280,15 @@ check_mosdns_status() {
 
 check_subconverter_status() {
     PID=$(pidof subconverter)
+    if [ -n "$PID" ];then
+      return 0
+    else
+      return 1
+    fi
+}
+
+check_adguardhome_status() {
+    PID=$(pidof AdGuardHome)
     if [ -n "$PID" ];then
       return 0
     else
@@ -1443,7 +1553,7 @@ meta_getconfig(){
     [ -z "$metacore" ] && metacore=meta-release
     PID=$(pidof meta)
     if [ -n "$PID" ];then
-      check_clash_port
+      check_meta_port
       if [ $? -eq 0 ];then
       run="${green}已运行${end}"
       VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
@@ -1498,6 +1608,24 @@ subconverter_getconfig(){
     fi
 }
 
+adguardhome_getconfig(){
+    source $CFG_PATH
+    PID=$(pidof AdGuardHome)
+    if [ -n "$PID" ];then
+      run="${green}已运行${end}"
+      VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
+      echo -e "4. ${green}重启 ${end}AdGuardHome   "$run",内存占用:${blue}"$VmRSS"${end}"
+    else
+      if [ "$adg_home" != "已开启" ];then
+        run="${red}未启用${end}"
+        echo -e "4. ${green}重启 ${end}AdGuardHome   "$run""
+      else
+        run="${red}没有运行${end}"
+        echo -e "4. ${green}重启 ${end}AdGuardHome   "$run""
+      fi
+    fi
+}
+
 daed_getconfig(){
     source $CFG_PATH
     PID=$(pidof daed)
@@ -1538,6 +1666,7 @@ show_menu() {
     meta_getconfig
     mosdns_getconfig
     subconverter_getconfig
+    adguardhome_getconfig
     daed_getconfig
     echo -----------------------------------------------
     echo -e "6. ${green}导入 ${end}Meta配置文件"
@@ -2065,7 +2194,8 @@ update_AutoBox_config() {
     echo -----------------------------------------------
     echo -e "1. ${green}重置 ${end}Mosdns配置文件"
     echo -e "2. ${green}重置 ${end}EasyMosdns配置文件"
-    echo -e "3. ${green}重置 ${end}daed配置文件"
+    echo -e "3. ${green}重置 ${end}AdGuardHome配置文件"
+    echo -e "4. ${green}重置 ${end}daed配置文件"
     echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
     echo -----------------------------------------------
@@ -2077,6 +2207,9 @@ update_AutoBox_config() {
       download_easymosdns_config 
       set_adg_home_mosdns
     elif [ "$num" = 3 ];then
+      download_adguardhome_config
+      set_adg_home_mosdns
+    elif [ "$num" = 4 ];then
       download_daed_db
       restart_daed
     elif [ "$num" = 0 ];then
@@ -2171,18 +2304,20 @@ update_menu() {
     new_meta_alpha_version=$(cat ${auto_dir}/version  | grep Meta-alpha_v | awk -F'=' '{ print $2 }')
     new_mosdns_version=$(cat ${auto_dir}/version  | grep Mosdns-release_v | awk -F'=' '{ print $2 }')
     new_subconverter_version=$(cat ${auto_dir}/version  | grep Subconverter-release_v | awk -F'=' '{ print $2 }')
+    new_adguardhome_version=$(cat ${auto_dir}/version  | grep adguardhome_v | awk -F'=' '{ print $2 }')
     new_AutoBox_version=$(cat ${auto_dir}/version  | grep -oE 'version=.*' | awk -F'=' '{ print $2 }')
     echo -----------------------------------------------
     echo -e "\033[30;43m欢迎使用更新/卸载功能${end}"
     echo -----------------------------------------------
-    echo -e "1. ${green}更新 ${end}AutoBox       ${yellow}${sh_ver}${end}      >  ${lightblue}${new_AutoBox_version}${end}"
-    echo -e "2. ${green}更新 ${end}Meta.Release: ${yellow}$(${meta_bin} -v | awk 'NR==1{print $3}')${end} >  ${lightblue}${new_meta_version}${end}"
-    echo -e "3. ${green}更新 ${end}Meta.Alpha:   ${yellow}$(${meta_alpha_bin} -v | awk 'NR==1{print $3}')${end}    >  ${lightblue}${new_meta_alpha_version}${end}"
-    echo -e "4. ${green}更新 ${end}Mosdns:       ${yellow}$(${mosdns_bin} version | awk '{print $1}'| cut -d'-' -f1)${end}     >  ${lightblue}${new_mosdns_version}${end}"
-    echo -e "5. ${green}更新 ${end}Subconverter  ${yellow}$(cat ${subconverter_version_file})${end}      >  ${lightblue}${new_subconverter_version}${end}" 
-    echo -e "6. ${green}重置 ${end}AutoBox配置文件"
-    echo -e "7. ${green}更新 ${end}Meta面板"
-    echo -e "8. ${green}更新 ${end}数据库文件"
+    echo -e "1. ${green}更新 ${end}AutoBox       ${yellow}${sh_ver}${end}           >  ${lightblue}${new_AutoBox_version}${end}"
+    echo -e "2. ${green}更新 ${end}Meta.Release: ${yellow}$(${meta_bin} -v | awk 'NR==1{print $3}')${end}       >  ${lightblue}${new_meta_version}${end}"
+    echo -e "3. ${green}更新 ${end}Meta.Alpha:   ${yellow}$(${meta_alpha_bin} -v | awk 'NR==1{print $3}')${end} >  ${lightblue}${new_meta_alpha_version}${end}"
+    echo -e "4. ${green}更新 ${end}Mosdns:       ${yellow}$(${mosdns_bin} version | awk '{print $1}'| cut -d'-' -f1)${end}        >  ${lightblue}${new_mosdns_version}${end}"
+    echo -e "5. ${green}更新 ${end}Subconverter  ${yellow}$(cat ${subconverter_version_file})${end}        >  ${lightblue}${new_subconverter_version}${end}" 
+    echo -e "6. ${green}更新 ${end}AdGuardHome   ${yellow}$(${adg_bin} --version | awk '{print $4}'| cut -d'-' -f1)${end}  >  ${lightblue}${new_adguardhome_version}${end}" 
+    echo -e "7. ${green}重置 ${end}AutoBox配置文件"
+    echo -e "8. ${green}更新 ${end}Meta面板"
+    echo -e "9. ${green}更新 ${end}数据库文件"
     echo -----------------------------------------------
     echo -e "10. ${red}卸载 ${end}AutoBox"
     echo -----------------------------------------------
@@ -2212,14 +2347,18 @@ update_menu() {
           before_show_menu
     ;;
       6)  
+          update_adguardhome_core
+          before_show_menu
+    ;;
+      7)  
           update_AutoBox_config
           update_menu
     ;;
-      7)  
+      8)  
           update_meta_dashboard
           update_menu
     ;;
-      8)  
+      9)  
           update_AutoBox_file
           update_menu
     ;;
@@ -2266,6 +2405,13 @@ uninstall() {
     rm -rf ${sub_bin}.old
     rm -rf ${sub_dir}
 
+    systemctl stop adguardhome.service >> /dev/null 2>&1
+    systemctl disable adguardhome.service >> /dev/null 2>&1
+    rm -rf /etc/systemd/system/adguardhome.service
+    rm -rf ${adg_bin}
+    rm -rf ${adg_bin}.old
+    rm -rf ${adg_dir}
+
     systemctl stop daed >> /dev/null 2>&1
     systemctl disable daed >> /dev/null 2>&1
     rm -rf /etc/daed
@@ -2299,11 +2445,15 @@ if [[ $# > 0 ]]; then
     ;;
       "update_subconverter_core") update_subconverter_core 0 
     ;;
+      "update_adguardhome_core") update_adguardhome_core 0 
+    ;;
       "restart_meta") restart_meta 0
     ;;
       "restart_mosdns") restart_mosdns 0
     ;;
       "restart_subconverter") restart_subconverter 0
+    ;;
+      "restart_adguardhome") restart_adguardhome 0
     ;;
       "restart") restart_all 0
     ;;        
@@ -2317,13 +2467,9 @@ if [[ $# > 0 ]]; then
     ;;                    
       "update") update_shell 0
     ;;
-      "update_y") update_shell 0
-    ;;  
       "uninstall") uninstall 0
     ;;
       "update_geoip_geosite") download_geoip && download_geosite 0
-    ;;
-      "install_subconverter") install_subconverter 0
     ;;
       *) show_usage
     ;;
