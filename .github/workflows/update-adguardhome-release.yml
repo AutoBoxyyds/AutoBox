@@ -72,7 +72,7 @@ jobs:
 
     - name: Purge jsDelivr CDN
       run: |
-        cd ./AdGuardHome-release/ || exit 1
+        cd ./bin/AdGuardHome-release/ || exit 1
         for file in $(ls); do
           curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/bin/AdGuardHome-release/${file}"
         done
