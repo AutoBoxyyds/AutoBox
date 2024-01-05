@@ -18,6 +18,7 @@ on:
       - ".github/workflows/update-geodata.yml"
       - ".github/workflows/update-subconverter-release.yml"
 
+permissions: write-all
 
 env:
   download_url: https://github.com/AdguardTeam/AdGuardHome/releases/download
@@ -59,6 +60,8 @@ jobs:
         rm -f ./tmp/AdGuardHome/*.sig
         cp -f ./tmp/AdGuardHome/AdGuardHome* ./bin/AdGuardHome-release/
         rm -rf ./tmp*
+        sed -i '/AdGuardHome-release_v*/'d ./bin/version
+        echo AdGuardHome-release_v=${download_version} >> ./bin/version
 
     - name: Commit and push
       run: |
