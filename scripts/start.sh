@@ -135,11 +135,9 @@ checkyaml(){
 modify_yaml(){
   getconfig
 ##########需要变更的配置###########
-  [ -z "$dns_nameserver" ] && dns_nameserver='https://doh.pub/dns-query, https://dns.alidns.com/dns-query'
-  [ -z "$dns_fallback" ] && dns_fallback='1.0.0.1, 8.8.4.4'
   [ -z "$skip_cert" ] && skip_cert=已开启
   #默认fake-ip过滤列表
-  fake_ft_df='"*","+.lan", "+.local"'
+  fake_ft_df='"*","+.lan", "+.local","anti-ad.net","*.adtidy.org","local.adguard.org"'
   lan='allow-lan: true'
   log='log-level: info'
   [ "$ipv6_support" = "已开启" ] && ipv6='ipv6: true' || ipv6='ipv6: false'
@@ -174,7 +172,7 @@ EOF
     store-fake-ip: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-  fake-ip-filter: ['${fake_ft_df}${fake_ft_ad}']
+  fake-ip-filter: [${fake_ft_df}${fake_ft_ad}]
 EOF
     else
     cat >> $TMPDIR/dns.yaml <<EOF
