@@ -620,17 +620,22 @@ download_mosdns_config () {
       [ -f "${mosdns_dir}/config.yaml" ] && rm -rf "${mosdns_dir}/config.yaml"
       mv /tmp/config.yaml ${mosdns_dir}/config.yaml
       [ ! -d "${mosdns_rules_dir}" ] && mkdir ${mosdns_rules_dir}
-      [ ! -f "${mosdns_rules_dir}/hosts.txt" ] && echo "# hosts" > ${mosdns_rules_dir}/hosts.txt
-      [ ! -f "${mosdns_rules_dir}/block_list.txt" ] && echo "# 黑明单域名" > ${mosdns_rules_dir}/block_list.txt
-      [ ! -f "${mosdns_rules_dir}/white_list.txt" ] && echo "# 白明单域名" > ${mosdns_rules_dir}/white_list.txt
-      [ ! -f "${mosdns_rules_dir}/grey_list.txt" ] && echo "# 灰明单域名" > ${mosdns_rules_dir}/grey_list.txt
-      [ ! -f "${mosdns_rules_dir}/ddns_list.txt" ] && echo "# DDNS 域名" > ${mosdns_rules_dir}/ddns_list.txt
-      [ ! -f "${mosdns_rules_dir}/local_ptr.txt" ] && echo "# PTR 黑名单" > ${mosdns_rules_dir}/local_ptr.txt
-      [ ! -f "${mosdns_rules_dir}/redirect.txt" ] && echo "# 重定向请求的域名" > ${mosdns_rules_dir}/redirect.txt
       [ ! -f "${mosdns_rules_dir}/direct-list.txt" ] && download_direct_list
       [ ! -f "${mosdns_rules_dir}/reject-list.txt" ] && download_reject_list
       [ ! -f "${mosdns_rules_dir}/CN-ip-cidr.txt" ] && download_CN_ip_cidr
       [ ! -f "${mosdns_rules_dir}/gfw.txt" ] && download_gfw
+      [ ! -f "${mosdns_rules_dir}/hosts.txt" ] && echo "# hosts" > ${mosdns_rules_dir}/hosts.txt
+      [ ! -f "${mosdns_rules_dir}/block_list.txt" ] && echo "# 黑明单域名" > ${mosdns_rules_dir}/block_list.txt
+      [ ! -f "${mosdns_rules_dir}/grey_list.txt" ] && echo "# 灰明单域名" > ${mosdns_rules_dir}/grey_list.txt
+      [ ! -f "${mosdns_rules_dir}/ddns_list.txt" ] && echo "# DDNS 域名" > ${mosdns_rules_dir}/ddns_list.txt
+      [ ! -f "${mosdns_rules_dir}/local_ptr.txt" ] && echo "# PTR 黑名单" > ${mosdns_rules_dir}/local_ptr.txt
+      [ ! -f "${mosdns_rules_dir}/redirect.txt" ] && echo "# 重定向请求的域名" > ${mosdns_rules_dir}/redirect.txt
+      [ ! -f "${mosdns_rules_dir}/white_list.txt" ] && cat >> ${mosdns_rules_dir}/white_list.txt <<EOF
+# 白明单域名
+local.adguard.org
+static.adtidy.org
+anti-ad.net
+EOF
     else
       echo -e "${red}Failed to download Mosdns Config.yaml${end}"
       exit 1
