@@ -113,12 +113,12 @@ checkyaml(){
   rm -rf /tmp/clash_proxies_$USER
   }
   #使用核心内置test功能检测
-  if [ -x $bindir/clash ];then
-    $bindir/clash -t -d $bindir -f $yamlnew >/dev/null
+  if [ -x $bindir/meta ];then
+    $bindir/meta -t -d $bindir -f $yamlnew >/dev/null
     if [ "$?" != "0" ];then
       logger "配置文件加载失败！请查看报错信息！" 31
-      $bindir/clash -t -d $bindir -f $yamlnew
-      echo "$($bindir/clash -t -d $bindir -f $yamlnew)" >> $clashdir/log
+      $bindir/meta -t -d $bindir -f $yamlnew
+      echo "$($bindir/meta -t -d $bindir -f $yamlnew)" >> $clashdir/log
       exit 1
     fi
   fi
@@ -161,7 +161,7 @@ modify_yaml(){
     cat > $TMPDIR/dns.yaml <<EOF
 dns:
   enable: true
-  listen: 0.0.0.0:'$dns_port'
+  listen: 0.0.0.0:$dns_port
   use-hosts: true
   $dns_v6
 EOF

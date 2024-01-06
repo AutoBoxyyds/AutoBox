@@ -479,6 +479,7 @@ download_dashboard () {
     fi
     rm -rf "${clash_ui}/dashboard" && mkdir -p ${clash_ui}/dashboard
     tar -zxvf /tmp/dashboard.tar.gz -C ${clash_ui}/dashboard >> /dev/null 2>&1
+    rm -rf /tmp/dashboard.tar.gz
 }
 
 download_yacd () {
@@ -491,6 +492,7 @@ download_yacd () {
     fi
     rm -rf "${clash_ui}/yacd" && mkdir -p ${clash_ui}/yacd
     tar -zxvf /tmp/yacd.tar.gz -C ${clash_ui}/yacd >> /dev/null 2>&1
+    rm -rf /tmp/yacd.tar.gz
 }
 
 download_meta_yacd () {
@@ -503,6 +505,7 @@ download_meta_yacd () {
     fi
     rm -rf "${clash_ui}/yacd-meta" && mkdir -p ${clash_ui}/yacd-meta
     tar -zxvf /tmp/yacd-meta.tar.gz -C ${clash_ui}/yacd-meta >> /dev/null 2>&1
+    rm -rf /tmp/yacd-meta.tar.gz
 }
 
 download_meta_dashboard () {
@@ -515,6 +518,7 @@ download_meta_dashboard () {
     fi
     rm -rf "${clash_ui}/dashboard-meta" && mkdir -p ${clash_ui}/dashboard-meta
     tar -zxvf /tmp/dashboard-meta.tar.gz -C ${clash_ui}/dashboard-meta >> /dev/null 2>&1
+    rm -rf /tmp/dashboard-meta.tar.gz
 }
 
 download_meta_metacubexd () {
@@ -527,6 +531,7 @@ download_meta_metacubexd () {
     fi
     rm -rf "${clash_ui}/metacubexd" && mkdir -p ${clash_ui}/metacubexd
     tar -zxvf /tmp/metacubexd.tar.gz -C ${clash_ui}/metacubexd >> /dev/null 2>&1
+    rm -rf /tmp/metacubexd.tar.gz
 }
 
 download_Country () {
@@ -1361,8 +1366,6 @@ linkconfig(){
   read -e -p "请输入对应数字 > " num
   if [ "$num" = 1 ];then
     webget2 $TMPDIR/clash_config_$USER.yaml ${url_cdn}"${update_url}/file/config-meta.yaml"
-    rm -rf $bindir/clash
-    cp -r ${meta_alpha_bin} ${bindir}/clash
     source $clash_configs_dir/start.sh checkyaml
     restart_meta
     echo -e "${green}Meta代理集配置文件:${yaml}${end}"
