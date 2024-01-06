@@ -137,7 +137,7 @@ modify_yaml(){
 ##########需要变更的配置###########
   [ -z "$skip_cert" ] && skip_cert=已开启
   #默认fake-ip过滤列表
-  fake_ft_df='"*","+.lan", "+.local","anti-ad.net","*.adtidy.org","local.adguard.org"'
+  fake_ft_df='"*","+.lan", "+.local"'
   lan='allow-lan: true'
   log='log-level: info'
   [ "$ipv6_support" = "已开启" ] && ipv6='ipv6: true' || ipv6='ipv6: false'
