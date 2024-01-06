@@ -37,6 +37,11 @@ TMPDIR=/tmp/AutoBox && [ ! -f $TMPDIR ] && mkdir -p $TMPDIR
 clash_dir=$auto_dir/clash && [ ! -f $clash_dir ] && mkdir -p $clash_dir
 clash_configs_dir=$clash_dir/configs && [ ! -f $clash_configs_dir ] && mkdir -p $clash_configs_dir
 clash_ui=$clash_dir/ui && [ ! -f $clash_ui ] && mkdir -p $clash_ui
+clash_myproxy=$clash_dir/MyProxy.yaml && [ ! -f $clash_myproxy ] && 
+cat > $clash_myproxy <<EOF
+proxies:
+  - {name: "自建节点文件", type: direct}
+EOF
 bindir=$auto_dir/clash
 meta_alpha_version_file=$clash_dir/version_meta
 yaml=$clash_dir/config.yaml
@@ -1355,7 +1360,7 @@ linkconfig(){
   echo -----------------------------------------------
   read -e -p "请输入对应数字 > " num
   if [ "$num" = 1 ];then
-    webget2 /tmp/clash_config_$USER.yaml ${url_cdn}"${update_url}/file/config-meta.yaml"
+    webget2 $TMPDIR/clash_config_$USER.yaml ${url_cdn}"${update_url}/file/config-meta.yaml"
     rm -rf $bindir/clash
     cp -r ${meta_alpha_bin} ${bindir}/clash
     source $clash_configs_dir/start.sh checkyaml
@@ -1364,7 +1369,7 @@ linkconfig(){
     echo -e "Meta控制面板:${lightblue}http://${local_ip}:${db_port}/ui/${end}"
   elif [ "$num" = 2 ];then
     if [ -f "${auto_dir}"/config.yaml ];then
-      cp -r  ${auto_dir}/config.yaml /tmp/clash_config_$USER.yaml
+      cp -r  ${auto_dir}/config.yaml $TMPDIR/clash_config_$USER.yaml
       source $clash_configs_dir/start.sh mix_yaml
       restart_meta
     else

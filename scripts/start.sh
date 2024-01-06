@@ -154,25 +154,6 @@ modify_yaml(){
   fi
   exper='experimental: {ignore-resolve-fail: true, interface-name: '$eth_n'}'
   #dns配置
-
-
-  # [ -z "$(cat $clashdir/user.yaml 2>/dev/null | grep '^dns:')" ] && { 
-  #   dns_default_meta=', tls://1.12.12.12:853, tls://223.5.5.5:853' && dns_fallback_filter_meta=', geoip-code: CN, geosite: [gfw]'
-  #   dns_default="114.114.114.114, 223.5.5.5$dns_default_meta"
-  #   dns_fallback_filter="geoip: true$dns_fallback_filter_meta"
-  #   if [ -f $clashdir/fake_ip_filter ];then
-  #     while read line;do
-  #       fake_ft_ad=$fake_ft_ad,\"$line\"
-  #     done < $clashdir/fake_ip_filter
-  #   fi
-  #   if [ "$dns_mod" = "fake-ip" ];then
-  #     dns='dns: {enable: true, '$dns_v6', listen: 0.0.0.0:'$dns_port', use-hosts: true, fake-ip-range: 198.18.0.1/16, enhanced-mode: fake-ip, fake-ip-filter: ['${fake_ft_df}${fake_ft_ad}'], default-nameserver: ['$dns_default'], nameserver: ['$dns_nameserver'], fallback: ['$dns_fallback'], fallback-filter: {'$dns_fallback_filter'}}'
-  #     profile='profile: {store-fake-ip: true}'
-  #   else
-  #     dns='dns: {enable: true, '$dns_v6', listen: 0.0.0.0:'$dns_port', use-hosts: true, enhanced-mode: redir-host, default-nameserver: ['$dns_default'], nameserver: ['$dns_nameserver$dns_local'], fallback: ['$dns_fallback'], fallback-filter: {'$dns_fallback_filter'}}'
-  #     profile='profile: {store-fake-ip: false}'
-  #   fi
-  # }
   [ -z "$(cat $clashdir/user.yaml 2>/dev/null | grep '^dns:')" ] && { 
     if [ -f $clashdir/fake_ip_filter ];then
       while read line;do
@@ -233,7 +214,6 @@ EOF
     sed -i 's/skip-cert-verify: true/skip-cert-verify: false/' $TMPDIR/proxy.yaml
   #添加配置
   cat > $TMPDIR/set.yaml <<EOF
-### 配置说明:https://wiki.metacubex.one/
 mixed-port: $mix_port
 redir-port: $redir_port
 tproxy-port: $tproxy_port
