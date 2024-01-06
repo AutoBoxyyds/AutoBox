@@ -4,6 +4,7 @@ getconfig(){
   auto_dir=/srv
   clashdir=$auto_dir/clash
   CFG_PATH=$auto_dir/mark
+  TMPDIR=/tmp/AutoBox && [ ! -f $TMPDIR ] && mkdir -p $TMPDIR
   eth_n=$(ip --oneline link show up | grep -v "lo" | awk '{print$2;exit}' | cut -d':' -f1 | cut -d'@' -f1)
   local_ip=$(ip a 2>&1 | grep -w 'inet' | grep 'global' | grep -E '\ 1(92|0|72|00|1)\.' | sed 's/.*inet.//g' | sed 's/\/[0-9][0-9].*$//g' | head -n 1);
   #检查/读取标识文件
@@ -22,11 +23,11 @@ getconfig(){
   [ -z "$db_port" ] && db_port=9090
   [ -z "$dns_port" ] && dns_port=5352
   [ -z "$sniffer" ] && sniffer=已开启
-  [ -z "$metacore" ] && metacore=clashpre
   [ -z "$NETFILTER_MARK" ] && NETFILTER_MARK=114514
   [ -z "$IPROUTE2_TABLE_ID" ] && IPROUTE2_TABLE_ID=100
   [ -z "$ipv6_support" ] && ipv6_support=未开启
   [ -z "$auto_download" ] && auto_download=已开启
+  [ -z "$hosts_opt" ] && hosts_opt=未启用
 }
 
 logger(){
@@ -72,28 +73,10 @@ webget2(){
     fi
 }
 
-getyaml(){
-  getconfig
-  #输出
-  Https="http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password"
-  echo -----------------------------------------------
-  echo 正在连接服务器获取配置文件…………链接地址为：
-  echo -e "\033[4;32mhttp://${local_ip}:25500/getprofile?name=profiles/formyairport.ini&token=password\033[0m"
-  echo 可以手动复制该链接到浏览器打开并查看数据是否正常！
-  #获取在线yaml文件
-  yaml=$clashdir/config.yaml
-  yamlnew=/tmp/clash_config_$USER.yaml
-  rm -rf $yamlnew
-  echo -e "\033[4;32m正在创建配置文件\033[0m"
-  webget2 $yamlnew "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password" rediroff
-  # $0 webget $yamlnew $Https
-  checkyaml
-}
-
 checkyaml(){
   getconfig
   yaml=$clashdir/config.yaml
-  yamlnew=/tmp/clash_config_$USER.yaml
+  yamlnew=$TMPDIR/clash_config_$USER.yaml
   #检测节点或providers
   if [ -z "$(cat $yamlnew | grep -E 'server|proxy-providers' | grep -v 'nameserver' | head -n 1)" ];then
     echo -----------------------------------------------
@@ -152,11 +135,11 @@ checkyaml(){
 modify_yaml(){
   getconfig
 ##########需要变更的配置###########
-  [ -z "$dns_nameserver" ] && dns_nameserver='114.114.114.114, 223.5.5.5'
+  [ -z "$dns_nameserver" ] && dns_nameserver='https://doh.pub/dns-query, https://dns.alidns.com/dns-query'
   [ -z "$dns_fallback" ] && dns_fallback='1.0.0.1, 8.8.4.4'
   [ -z "$skip_cert" ] && skip_cert=已开启
   #默认fake-ip过滤列表
-  fake_ft_df='"anti-ad.net","*.adtidy.org", "*.github.io", "*.lan", "time.windows.com", "time.nist.gov", "time.apple.com", "time.asia.apple.com", "*.ntp.org.cn", "*.openwrt.pool.ntp.org", "time1.cloud.tencent.com", "time.ustc.edu.cn", "pool.ntp.org", "ntp.ubuntu.com", "ntp.aliyun.com", "ntp1.aliyun.com", "ntp2.aliyun.com", "ntp3.aliyun.com", "ntp4.aliyun.com", "ntp5.aliyun.com", "ntp6.aliyun.com", "ntp7.aliyun.com", "time1.aliyun.com", "time2.aliyun.com", "time3.aliyun.com", "time4.aliyun.com", "time5.aliyun.com", "time6.aliyun.com", "time7.aliyun.com", "*.time.edu.cn", "time1.apple.com", "time2.apple.com", "time3.apple.com", "time4.apple.com", "time5.apple.com", "time6.apple.com", "time7.apple.com", "time1.google.com", "time2.google.com", "time3.google.com", "time4.google.com", "music.163.com", "*.music.163.com", "*.126.net", "musicapi.taihe.com", "music.taihe.com", "songsearch.kugou.com", "trackercdn.kugou.com", "*.kuwo.cn", "api-jooxtt.sanook.com", "api.joox.com", "joox.com", "y.qq.com", "*.y.qq.com", "streamoc.music.tc.qq.com", "mobileoc.music.tc.qq.com", "isure.stream.qqmusic.qq.com", "dl.stream.qqmusic.qq.com", "aqqmusic.tc.qq.com", "amobile.music.tc.qq.com", "*.xiami.com", "*.music.migu.cn", "music.migu.cn", "*.msftconnecttest.com", "*.msftncsi.com", "localhost.ptlogin2.qq.com", "*.*.*.srv.nintendo.net", "*.*.stun.playstation.net", "xbox.*.*.microsoft.com", "*.*.xboxlive.com", "proxy.golang.org","*.sgcc.com.cn","*.alicdn.com","*.aliyuncs.com"'
+  fake_ft_df='"*","+.lan", "+.local"'
   lan='allow-lan: true'
   log='log-level: info'
   [ "$ipv6_support" = "已开启" ] && ipv6='ipv6: true' || ipv6='ipv6: false'
@@ -165,36 +148,77 @@ modify_yaml(){
   [ -d $clashdir/ui ] && db_ui=ui
   #默认TUN配置
   if [ "$redir_mod" = "混合模式" -o "$redir_mod" = "Tun模式" ];then
-    [ "$metacore" = 'meta-release' ] && tun_meta=', device: utun'
-    tun="tun: {enable: true, stack: system$tun_meta, auto-route: false, auto-detect-interface: false}"
+    tun="tun: {enable: true, stack: system, device: utun, auto-route: false, auto-detect-interface: false}"
   else
     tun='tun: {enable: false}'
   fi
   exper='experimental: {ignore-resolve-fail: true, interface-name: '$eth_n'}'
   #dns配置
+
+
+  # [ -z "$(cat $clashdir/user.yaml 2>/dev/null | grep '^dns:')" ] && { 
+  #   dns_default_meta=', tls://1.12.12.12:853, tls://223.5.5.5:853' && dns_fallback_filter_meta=', geoip-code: CN, geosite: [gfw]'
+  #   dns_default="114.114.114.114, 223.5.5.5$dns_default_meta"
+  #   dns_fallback_filter="geoip: true$dns_fallback_filter_meta"
+  #   if [ -f $clashdir/fake_ip_filter ];then
+  #     while read line;do
+  #       fake_ft_ad=$fake_ft_ad,\"$line\"
+  #     done < $clashdir/fake_ip_filter
+  #   fi
+  #   if [ "$dns_mod" = "fake-ip" ];then
+  #     dns='dns: {enable: true, '$dns_v6', listen: 0.0.0.0:'$dns_port', use-hosts: true, fake-ip-range: 198.18.0.1/16, enhanced-mode: fake-ip, fake-ip-filter: ['${fake_ft_df}${fake_ft_ad}'], default-nameserver: ['$dns_default'], nameserver: ['$dns_nameserver'], fallback: ['$dns_fallback'], fallback-filter: {'$dns_fallback_filter'}}'
+  #     profile='profile: {store-fake-ip: true}'
+  #   else
+  #     dns='dns: {enable: true, '$dns_v6', listen: 0.0.0.0:'$dns_port', use-hosts: true, enhanced-mode: redir-host, default-nameserver: ['$dns_default'], nameserver: ['$dns_nameserver$dns_local'], fallback: ['$dns_fallback'], fallback-filter: {'$dns_fallback_filter'}}'
+  #     profile='profile: {store-fake-ip: false}'
+  #   fi
+  # }
   [ -z "$(cat $clashdir/user.yaml 2>/dev/null | grep '^dns:')" ] && { 
-    [ "$metacore" = 'meta-release' ] && dns_default_meta=', tls://1.12.12.12:853, tls://223.5.5.5:853' && dns_fallback_filter_meta=', geoip-code: CN, geosite: [gfw]'
-    dns_default="114.114.114.114, 223.5.5.5$dns_default_meta"
-    dns_fallback_filter="geoip: true$dns_fallback_filter_meta"
     if [ -f $clashdir/fake_ip_filter ];then
       while read line;do
         fake_ft_ad=$fake_ft_ad,\"$line\"
       done < $clashdir/fake_ip_filter
     fi
+    cat > $TMPDIR/dns.yaml <<EOF
+dns:
+  enable: true
+  listen: 0.0.0.0:'$dns_port'
+  use-hosts: true
+  $dns_v6
+EOF
     if [ "$dns_mod" = "fake-ip" ];then
-
-      dns='dns: {enable: true, '$dns_v6', listen: 0.0.0.0:'$dns_port', use-hosts: true, fake-ip-range: 198.18.0.1/16, enhanced-mode: fake-ip, fake-ip-filter: ['${fake_ft_df}${fake_ft_ad}'], default-nameserver: ['$dns_default'], nameserver: ['$dns_nameserver'], fallback: ['$dns_fallback'], fallback-filter: {'$dns_fallback_filter'}}'
-      profile='profile: {store-fake-ip: true}'
+    cat >> $TMPDIR/dns.yaml <<EOF
+  profile:
+    store-selected: true
+    store-fake-ip: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter: ['${fake_ft_df}${fake_ft_ad}']
+EOF
     else
-      dns='dns: {enable: true, '$dns_v6', listen: 0.0.0.0:'$dns_port', use-hosts: true, enhanced-mode: redir-host, default-nameserver: ['$dns_default'], nameserver: ['$dns_nameserver$dns_local'], fallback: ['$dns_fallback'], fallback-filter: {'$dns_fallback_filter'}}'
-      profile='profile: {store-fake-ip: false}'
+    cat >> $TMPDIR/dns.yaml <<EOF
+  enhanced-mode: redir-host
+EOF
     fi
+    cat >> $TMPDIR/dns.yaml <<EOF
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+  nameserver-policy:
+    "geosite:private":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    "geosite:geolocation-!cn":
+      - "https://dns.cloudflare.com/dns-query"
+      - "https://dns.google/dns-query"
+EOF
   }
   #域名嗅探配置
-  [ "$sniffer" = "已开启" ] && sniffer_set="sniffer: {enable: true, skip-domain: [Mijia Cloud], sniff: {tls: {ports: [443, 8443]}, http: {ports: [80, 8080-8880], override-destination: true}}}"
+  [ "$sniffer" = "已开启" ] && sniffer_set="sniffer: {enable: true, skip-domain: [Mijia Cloud], sniff: {TLS: {ports: [443, 8443]}, QUIC: {ports: [443, 8443]}, HTTP: {ports: [80, 8080-8880], override-destination: true}}}"
   #设置目录
   yaml=$clashdir/config.yaml
-  tmpdir=/tmp/clash_$USER
   #预读取变量
   mode=$(grep "^mode" $yaml | head -1 | awk '{print $2}')
   [ -z "$mode" ] && mode='Rule'
@@ -202,14 +226,13 @@ modify_yaml(){
   a=$(grep -n "port:" $yaml | head -1 | cut -d ":" -f 1)
   b=$(grep -n "^prox" $yaml | head -1 | cut -d ":" -f 1)
   b=$((b-1))
-  mkdir -p $tmpdir > /dev/null
-  [ "$b" -gt 0 ] && sed "${a},${b}d" $yaml > $tmpdir/proxy.yaml || cp -f $yaml $tmpdir/proxy.yaml
+  mkdir -p $TMPDIR > /dev/null
+  [ "$b" -gt 0 ] && sed "${a},${b}d" $yaml > $TMPDIR/proxy.yaml || cp -f $yaml $TMPDIR/proxy.yaml
   #跳过本地tls证书验证
-  [ "$skip_cert" = "已开启" ] && sed -i 's/skip-cert-verify: false/skip-cert-verify: true/' $tmpdir/proxy.yaml || \
-    sed -i 's/skip-cert-verify: true/skip-cert-verify: false/' $tmpdir/proxy.yaml
+  [ "$skip_cert" = "已开启" ] && sed -i 's/skip-cert-verify: false/skip-cert-verify: true/' $TMPDIR/proxy.yaml || \
+    sed -i 's/skip-cert-verify: true/skip-cert-verify: false/' $TMPDIR/proxy.yaml
   #添加配置
-###################################
-  cat > $tmpdir/set.yaml <<EOF
+  cat > $TMPDIR/set.yaml <<EOF
 ### 配置说明:https://wiki.metacubex.one/
 mixed-port: $mix_port
 redir-port: $redir_port
@@ -218,47 +241,35 @@ authentication: ["$authentication"]
 $lan
 mode: $mode
 $log
+$exper
 ipv6: false
-$profile
 external-controller: :$db_port
 external-ui: $db_ui
 secret: $secret
 $tun
-$exper
-$dns
 $sniffer_set
-EOF
-  if [ "$metacore" = "meta-release" ];then
-    if [ ! -f "$clashdir/meta/user_meta.yaml" ]; then
-    mkdir ${clashdir}/meta
-  cat > $clashdir/meta/user_meta.yaml <<EOF
-### Meta内核专属配置，请手动编辑$clashdir/meta/user_meta.yaml后重启
-## https://wiki.metacubex.one/config/general/
 find-process-mode: off
 unified-delay: true
 tcp-concurrent: true
 geodata-mode: true 
 geodata-loader: standard
 geox-url:
-  geoip: "https://testingcf.jsdelivr.net/gh/gdfsnhsw/meta-rules-dat@release/geoip.dat"
-  geosite: "https://testingcf.jsdelivr.net/gh/gdfsnhsw/meta-rules-dat@release/geosite.dat"
-  mmdb: "https://testingcf.jsdelivr.net/gh/gdfsnhsw/meta-rules-dat@release/country.mmdb"
-### meta添加shadowsocks入站
+  geoip: "https://mirror.ghproxy.com/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat"
+  geosite: "https://mirror.ghproxy.com/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  mmdb: "https://mirror.ghproxy.com/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb"
+######### shadowsocks入站 start #######
 listeners:
-  - name: daed
+  - name: dae
     type: shadowsocks
-    port: 52023
-    password: autoclash2023
+    port: 52024
+    password: autobox2024
     cipher: none
-###  
+######### shadowsocks入站 end ####### 
 EOF
-    fi
-  fi
-###################################
   #读取本机hosts并生成配置文件
   if [ "$hosts_opt" != "未启用" ] && [ -z "$(grep -E '^hosts:' $clashdir/user.yaml 2>/dev/null)" ];then
     #NTP劫持
-    cat >> $tmpdir/hosts.yaml <<EOF
+    cat >> $TMPDIR/hosts.yaml <<EOF
 hosts:
    'time.android.com': 203.107.6.88
    'time.facebook.com': 203.107.6.88  
@@ -271,38 +282,34 @@ EOF
       [ -z "$(echo "$line" | grep -oE '^#')" ] && \
       hosts_ip=$(echo $line | awk '{print $1}')  && \
       hosts_domain=$(echo $line | awk '{print $2}') && \
-      [ -z "$(cat $tmpdir/hosts.yaml | grep -oE "$hosts_domain")" ] && \
-      echo "   '$hosts_domain': $hosts_ip" >> $tmpdir/hosts.yaml
+      [ -z "$(cat $TMPDIR/hosts.yaml | grep -oE "$hosts_domain")" ] && \
+      echo "   '$hosts_domain': $hosts_ip" >> $TMPDIR/hosts.yaml
     done < $sys_hosts
   fi
   #合并文件
   [ -f $clashdir/user.yaml ] && yaml_user=$clashdir/user.yaml
-  [ -f $tmpdir/hosts.yaml ] && yaml_hosts=$tmpdir/hosts.yaml
-  [ -f $tmpdir/proxy.yaml ] && yaml_proxy=$tmpdir/proxy.yaml
-  [ -f $clashdir/meta/user_meta.yaml ] && yaml_user_meta=$clashdir/meta/user_meta.yaml
-  cut -c 1- $tmpdir/set.yaml $yaml_user_meta $yaml_hosts $yaml_user $yaml_proxy > $tmpdir/config.yaml
+  [ -f $TMPDIR/dns.yaml ] && yaml_dns=$TMPDIR/dns.yaml
+  [ -f $TMPDIR/hosts.yaml ] && yaml_hosts=$TMPDIR/hosts.yaml
+  [ -f $TMPDIR/proxy.yaml ] && yaml_proxy=$TMPDIR/proxy.yaml
+  cut -c 1- $TMPDIR/set.yaml $yaml_dns $yaml_hosts $yaml_user $yaml_proxy > $TMPDIR/config.yaml
   # #插入自定义规则
-  sed -i "/#自定义规则/d" $tmpdir/config.yaml
-  space_rules=$(sed -n '/^rules/{n;p}' $tmpdir/proxy.yaml | grep -oE '^ *') #获取空格数
-  #tun/fake-ip防止流量回环
-  if [ "$mode" = "Rule" ] && [ "$redir_mod" = "混合模式" -o "$redir_mod" = "Tun模式" -o "$dns_mod" = "fake-ip" ];then
-    sed -i "/^rules:/a\\$space_rules- SRC-IP-CIDR,198.18.0.0/16,REJECT #自定义规则(防止回环)" $tmpdir/config.yaml
-  fi
+  sed -i "/#自定义规则/d" $TMPDIR/config.yaml
+  space_rules=$(sed -n '/^rules/{n;p}' $TMPDIR/proxy.yaml | grep -oE '^ *') #获取空格数
   #如果没有使用小闪存模式
-  if [ "$tmpdir" != "$bindir" ];then
-    cmp -s $tmpdir/config.yaml $yaml >/dev/null 2>&1
-    [ "$?" != 0 ] && mv -f $tmpdir/config.yaml $yaml || rm -f $tmpdir/config.yaml
+  if [ "$TMPDIR" != "$bindir" ];then
+    cmp -s $TMPDIR/config.yaml $yaml >/dev/null 2>&1
+    [ "$?" != 0 ] && mv -f $TMPDIR/config.yaml $yaml || rm -f $TMPDIR/config.yaml
   fi
-  rm -f $tmpdir/set.yaml
-  rm -f $tmpdir/proxy.yaml
-  rm -f $tmpdir/hosts.yaml
-  # rm -f $tmpdir/user_meta.yaml
+  rm -f $TMPDIR/set.yaml
+  rm -f $TMPDIR/dns.yaml
+  rm -f $TMPDIR/proxy.yaml
+  rm -f $TMPDIR/hosts.yaml
 }
 
 afstart(){
   #读取配置文件
   getconfig
-  $bindir/clash -t -d $clashdir >/dev/null
+  $bindir/meta -t -d $clashdir >/dev/null
   if [ "$?" = 0 ];then
     PID=$(pidof daed)
     if [ -z "$PID" ];then
@@ -313,9 +320,9 @@ afstart(){
       [ "$redir_mod" = "TProxy模式" ] && tproxy_setup
     fi
   else
-    logger "clash服务启动失败！请查看报错信息！" 31
-    $bindir/clash -t -d $clashdir
-    echo "$($bindir/clash -t -d $clashdir)" >> $clashdir/log
+    logger "meta服务启动失败！请查看报错信息！" 31
+    $bindir/meta -t -d $clashdir
+    echo "$($bindir/meta -t -d $clashdir)" >> $clashdir/log
     $0 stop
     exit 1
   fi
@@ -460,9 +467,6 @@ case $1 in
                   getconfig
                   [ "$disoverride" != "已禁用" ] && modify_yaml 0
                   ;;
-"getyaml") 
-                  getyaml 0
-                  ;;
 "checkyaml") 
                   checkyaml 0
                   ;;                  
@@ -470,11 +474,6 @@ case $1 in
                   checkyaml 0
                   modify_yaml 0
                   ;;  
-"updateyaml") 
-                  getconfig 0
-                  getyaml 0
-                  modify_yaml 0
-                  ;;
 "stop_firewall") 
                   stop_firewall 0
                   ;;

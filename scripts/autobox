@@ -1186,7 +1186,7 @@ restart_meta() {
     sleep 2
     systemctl restart meta.service >> /dev/null 2>&1
     sleep 1
-    check_clash_status
+    check_meta_status
     if [[ $? == 0 ]]; then
     while true; do
         # ip link show utun  >> /dev/null 2>&1
@@ -1277,8 +1277,8 @@ restart_all() {
     echo -e "${green}AutoBox 重启成功!${end}"
 }
 
-check_clash_status() {
-    PID=$(pidof clash)
+check_meta_status() {
+    PID=$(pidof meta)
     if [ -n "$PID" ];then
       return 0
     else
@@ -1506,11 +1506,11 @@ clashcron(){
     echo  -e "${yellow}已添加的定时任务:${purple}"
     crontab -l | grep -oE ' #.*' 
     echo -e "${end}"-----------------------------------------------
-    echo -e " 1 设置${yellow}定时重启${end}Meta服务"
-    echo -e " 2 设置${red}定时停止${end}Meta服务"
-    echo -e " 3 设置${green}定时开启${end}Meta服务"
-    echo -e " 4 设置${yellowb}定时更新${end}GeoIP和GeoSite"
-    echo -e " 5 设置${lightblueb}定时更新${end}AutoBox服务版本"
+    echo -e " 1 ${green}设置定时${end} 重启Meta服务"
+    echo -e " 2 ${green}设置定时${end} 停止Meta服务"
+    echo -e " 3 ${green}设置定时${end} 开启Meta服务"
+    echo -e " 4 ${green}设置定时${end} 更新GeoIP和GeoSite"
+    echo -e " 5 ${green}设置定时${end} 更新AutoBox服务版本"
     echo -----------------------------------------------
     echo -e " 0 返回上级菜单" 
     echo -----------------------------------------------
@@ -1536,12 +1536,12 @@ clashcron(){
       clashcron
     elif [ "$num" = 4 ]; then 
       cronname=更新GeoIP和GeoSite
-      cronset="/usr/local/bin/AutoBox update_geoip_geosite"
+      cronset="/usr/local/bin/autobox update_geoip_geosite"
       setcron 
       clashcron
     elif [ "$num" = 5 ]; then 
       cronname=更新AutoBox服务版本
-      cronset="/usr/local/bin/AutoBox check_ver"
+      cronset="/usr/local/bin/autobox check_ver"
       setcron 
       clashcron
     else
