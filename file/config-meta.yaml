@@ -11,9 +11,9 @@ proxy-groups:
   - { name: '🌀 手动切换', type: select, include-all-providers: true }
   - { name: '🔰 故障转移', type: fallback, include-all-providers: true }
   - { name: '📲 Telegram', <<: *NODES }
-  - { name: '📹 YouTube', <<: *NODES, disable-udp: true }
+  - { name: '📺 YouTube', <<: *NODES, disable-udp: true }
   - { name: '🎥 NETFLIX', <<: *NODES }
-  - { name: 'Ⓜ️ Google', <<: *NODES }
+  - { name: '🧿 Google', <<: *NODES }
   - { name: '📹 Twitter', <<: *NODES }
   - { name: '💽 巴哈姆特', <<: *NODES }
   - { name: '🐟 漏网之鱼', <<: *NODES }
