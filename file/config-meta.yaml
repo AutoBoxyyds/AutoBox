@@ -9,7 +9,7 @@ proxy-providers:
 proxy-groups:
   - { name: '🚀 节点选择', type: select, proxies: [🔰 故障转移, 🌀 手动切换, ⛱️ 负载均衡, 🇭🇰 香港节点, 🇸🇬 新加坡节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🏳️‍🌈 其他节点, 🔄 延迟最低, 🎯 全球直连] }
   - { name: '🌀 手动切换', type: select, include-all-providers: true }
-  - { name: '🔰 故障转移', type: fallback, include-all-providers: true }
+  - { name: '🔰 故障转移', type: fallback, proxies: [🌀 手动切换, 🇭🇰 香港节点, 🇸🇬 新加坡节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🏳️‍🌈 其他节点, 🔄 延迟最低, 🎯 全球直连] }
   - { name: '📲 Telegram', <<: *NODES }
   - { name: '📺 YouTube', <<: *NODES, disable-udp: true }
   - { name: '🎥 NETFLIX', <<: *NODES }
