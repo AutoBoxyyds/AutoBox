@@ -2,8 +2,8 @@ bind_host: 0.0.0.0
 bind_port: 3000
 beta_bind_port: 0
 users:
-  - name: autoclash
-    password: $2a$10$kpte8lzfvIAwvh5LZCIMs.mfCjcLoaB9YDS3NMMFa/KORZV6lqIEW
+  - name: autobox
+    password: $2y$10$DmwE0G.6kZZjaFSQ.nT3/emmIt5HDEPlMXP65J581gE44/OfirXu2
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
