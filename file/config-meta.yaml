@@ -4,8 +4,8 @@ provider: &PROVIDER { interval: 3600, health-check: { enable: true, url: 'https:
 NODES: &NODES { type: select, proxies: [🚀 节点选择, 🔰 故障转移, 🌀 手动切换, ⛱️ 负载均衡, 🇭🇰 香港节点, 🇸🇬 新加坡节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🏳️‍🌈 其他节点, 🔄 延迟最低, 🎯 全球直连] }
 ######### 锚点 end #########
 proxy-providers:
-  AllProxy: &AllProxy { <<: *PROVIDER, type: http, path: ./proxy/AllProxy.yaml, url: "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password&list=true" }
   MYProxy: &MYProxy { <<: *PROVIDER, type: file, path: ./MyProxy.yaml }
+  AllProxy: &AllProxy { <<: *PROVIDER, type: http, path: ./proxy/AllProxy.yaml, url: "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password&list=true" }
 proxy-groups:
   - { name: '🚀 节点选择', type: select, proxies: [🔰 故障转移, 🌀 手动切换, ⛱️ 负载均衡, 🇭🇰 香港节点, 🇸🇬 新加坡节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🏳️‍🌈 其他节点, 🔄 延迟最低, 🎯 全球直连] }
   - { name: '🌀 手动切换', type: select, include-all-providers: true }
