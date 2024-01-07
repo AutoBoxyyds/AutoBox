@@ -401,13 +401,13 @@ update_meta_core() {
     local_meta_version=$(cat "${meta_version_file}")
     # local_meta_version=$(${meta_bin} -v | awk 'NR==1{print $3}')
     remote_meta_version=$(cat ${auto_dir}/version  | grep Meta-release_v | awk -F'=' '{ print $2 }')
-    echo -e "${green}Local Meta alpha: ${local_meta_version}.${end}"
+    echo -e "${green}Local Meta release: ${local_meta_version}.${end}"
     if (verlt "${local_meta_version}" "${remote_meta_version}") then
       echo -e "${green}Found a new version of Meta ${remote_meta_version}${end}"
       read -e -p "是否更新？(1/0) > " res
       [ "$res" = 0 ] && update_menu
     else
-      echo -e "${green}Meta is up to date${end}"
+      echo -e "${green}Meta release is up to date${end}"
       before_show_menu
     fi
     install_meta
@@ -451,14 +451,14 @@ update_meta_alpha_core() {
         echo -e "${green}Meta Alpha has been updated${end}"
         restart_meta
       elif [ "$res" = '0' ]; then
-        update_menu
+        before_show_menu
       else
         errornum
       fi
     # if (verlt "${local_meta_alpha_version}" "${remote_meta_alpha_version}") then
-    #   echo -e "${green}Found a new version of Meta Alpha ${remote_meta_alpha_version}${end}"
-    #   read -e -p "是否更新？(1/0) > " res
-    #   [ "$res" = 0 ] && update_menu
+      # echo -e "${green}Found a new version of Meta Alpha ${remote_meta_alpha_version}${end}"
+      # read -e -p "是否更新？(1/0) > " res
+      # [ "$res" = 0 ] && before_show_menu
     # else
     #   echo -e "${green}Meta Alpha is up to date${end}"
     #   before_show_menu
@@ -863,15 +863,15 @@ install_nftables() {
     download_cn_ip
     cat << EOF > $clash_configs_dir/private.nft
 define private_list = {
-  10.0.0.0/8,
-  11.0.0.0/8,
-  100.64.0.0/10,
-  127.0.0.0/8,
-  169.254.0.0/16,
-  172.16.0.0/12,
-  192.168.0.0/16,
-  224.0.0.0/4,
-  240.0.0.0/4
+10.0.0.0/8,
+11.0.0.0/8,
+100.64.0.0/10,
+127.0.0.0/8,
+169.254.0.0/16,
+172.16.0.0/12,
+192.168.0.0/16,
+224.0.0.0/4,
+240.0.0.0/4
 }
 EOF
 }
@@ -945,23 +945,23 @@ db_port=9090
 secret=''
 # dns_port:meta到DNS服务器监听端口
 dns_port=5352
-# skip_cert:跳过本地证书验证	[已开启,未启用]
+# skip_cert:跳过本地证书验证  [已开启,未启用]
 skip_cert=已开启
-# sniffer:嗅探域名	[已开启,未启用]
+# sniffer:嗅探域名  [已开启,未启用]
 sniffer=已开启
 # url_cdn:代理地址
 url_cdn='https://mirror.ghproxy.com/'
-# meta:meta核心	[meta-release,meta-alpha]
+# meta:meta核心  [meta-release,meta-alpha]
 metacore=meta-release
-# redir_mod:meta运行模式		[混合模式,Redir模式,Tun模式,TProxy模式]
+# redir_mod:meta运行模式    [混合模式,Redir模式,Tun模式,TProxy模式]
 redir_mod=TProxy模式
-# dns_mod:meta的DNS模式		[fake-ip,redir_host]
+# dns_mod:meta的DNS模式    [fake-ip,redir_host]
 dns_mod=fake-ip
 # mix_port:HTTP(S) 和 SOCKS 代理混合端口
 mix_port=7890
-# mosdns_ver:Mosdns版本	[MosdnsV5,EasyMosdns]
+# mosdns_ver:Mosdns版本  [MosdnsV5,EasyMosdns]
 mosdns_ver=MosdnsV5
-# disoverride:配置文件覆写	[未禁用,已禁用]
+# disoverride:配置文件覆写  [未禁用,已禁用]
 disoverride=未禁用
 # dns_nameserver:基础DNS,多个DNS地址请用“|”或者“, ”分隔输入
 dns_nameserver='https://doh.pub/dns-query, https://dns.alidns.com/dns-query'
@@ -1662,7 +1662,7 @@ getconfig2(){
     source $CFG_PATH
     [ -z "$redir_mod" ] && redir_mod=混合模式
     echo -----------------------------------------------
-    echo -e "\033[30;46m         欢迎使用AutoBox          版本:${sh_ver}${end}"
+    echo -e "\033[30;46m         欢迎使用AutoBox          版本:${sh_ver}     ${end}"
     check_disk_status
     check_CFG_PATH
     echo -e "${purple}Meta${end}控制面板:${lightblue}    http://${local_ip}:${db_port}/ui/${end}"
