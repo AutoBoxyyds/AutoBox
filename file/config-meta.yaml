@@ -40,10 +40,10 @@ rules:
   - AND,(AND,(DST-PORT,443),(NETWORK,UDP)),(GEOSITE,geolocation-!cn),REJECT # quic
   - GEOIP,lan,🎯 全球直连,no-resolve
   - GEOSITE,twitter,📹 Twitter
-  - GEOSITE,youtube,📹 YouTube
+  - GEOSITE,youtube,📺 YouTube
   - GEOSITE,telegram,📲 Telegram
   - GEOSITE,netflix,🎥 NETFLIX
-  - GEOSITE,google,Ⓜ️ Google
+  - GEOSITE,google,🧿 Google
   - GEOSITE,bahamut,💽 巴哈姆特
   - GEOSITE,geolocation-!cn,🐟 漏网之鱼
   - GEOIP,netflix,🎥 NETFLIX
