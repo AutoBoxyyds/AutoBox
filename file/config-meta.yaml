@@ -4,17 +4,18 @@ provider: &PROVIDER { interval: 3600, health-check: { enable: true, url: 'https:
 NODES: &NODES { type: select, proxies: [🚀 节点选择, 🔰 故障转移, 🌀 手动切换, ⛱️ 负载均衡, 🇭🇰 香港节点, 🇸🇬 新加坡节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🏳️‍🌈 其他节点, 🔄 延迟最低, 🎯 全球直连] }
 ######### 锚点 end #########
 proxy-providers:
-  AllProxy: &AllProxy { <<: *PROVIDER, type: http, path: ./Provider/Proxy/AllProxy.yaml, url: "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password&list=true" }
-  MYProxy: &MYProxy { <<: *PROVIDER, type: file, path: ./MyProxy.yaml }
+  AllProxy: &AllProxy { <<: *PROVIDER, type: http, path: ./proxy/AllProxy.yaml, url: "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password&list=true" }
+  MYProxy: &MYProxy { <<: *PROVIDER, type: file, path: ./proxy/MyProxy.yaml }
 proxy-groups:
   - { name: '🚀 节点选择', type: select, proxies: [🔰 故障转移, 🌀 手动切换, ⛱️ 负载均衡, 🇭🇰 香港节点, 🇸🇬 新加坡节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🏳️‍🌈 其他节点, 🔄 延迟最低, 🎯 全球直连] }
   - { name: '🌀 手动切换', type: select, include-all-providers: true }
   - { name: '🔰 故障转移', type: fallback, include-all-providers: true }
-  - { name: '📈 SpeedTest', <<: *NODES }
   - { name: '📲 Telegram', <<: *NODES }
   - { name: '📹 YouTube', <<: *NODES, disable-udp: true }
   - { name: '🎥 NETFLIX', <<: *NODES }
+  - { name: 'Ⓜ️ Google', <<: *NODES }
   - { name: '📹 Twitter', <<: *NODES }
+  - { name: '💽 巴哈姆特', <<: *NODES }
   - { name: '🐟 漏网之鱼', <<: *NODES }
   - { name: '🏳️‍🌈 其他节点', type: select, include-all-providers: true, filter: '^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|🇰🇷)).*' }
   - { name: '🇭🇰 香港节点', type: url-test, include-all-providers: true, tolerance: 10, filter: '^(?=.*(🇭🇰|港|虚通|(?i)HK|Hong))(?!.*(回国|校园|游戏|教育|(?i)GAME|IPV6)).*$' }
@@ -31,20 +32,20 @@ rule-anchor:
   domain: &domain {type: http, interval: 86400, behavior: domain, format: yaml}
   classical: &classical {type: http, interval: 86400, behavior: classical, format: yaml}
 rule-providers:
-  speedtest:
-    <<: *domain
-    url: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Speedtest/Speedtest.yaml"
+  # youtube_domain:
+  #   <<: *domain
+  #   url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.yaml"
 rules:
   # - NOT,((DST-PORT,22/53/80/123/143/194/443/465/587/853/993/995/5222/8080/8443)),REJECT # 拦截非常用端口
   - AND,(AND,(DST-PORT,443),(NETWORK,UDP)),(GEOSITE,geolocation-!cn),REJECT # quic
   - GEOIP,lan,🎯 全球直连,no-resolve
-  - RULE-SET,speedtest,📈 SpeedTest
   - GEOSITE,twitter,📹 Twitter
   - GEOSITE,youtube,📹 YouTube
   - GEOSITE,telegram,📲 Telegram
   - GEOSITE,netflix,🎥 NETFLIX
+  - GEOSITE,google,Ⓜ️ Google
+  - GEOSITE,bahamut,💽 巴哈姆特
   - GEOSITE,geolocation-!cn,🐟 漏网之鱼
-
   - GEOIP,netflix,🎥 NETFLIX
   - GEOIP,telegram,📲 Telegram
   - GEOIP,twitter,📹 Twitter
