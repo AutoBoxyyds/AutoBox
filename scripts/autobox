@@ -728,7 +728,7 @@ fdn=true
 emoji=true
 append_info=false
 list=true
-exclude=(流量|本站|官网|过期|群|IPV6|到期|过期时间|产品名称|先购买套餐|流量消耗|永久|更新订阅|倒卖|回国|校园|游戏|教育|重置)
+exclude=(流量|本站|官网|过期|群|IPV6|到期|过期时间|产品名称|先购买套餐|流量消耗|永久|更新订阅|倒卖|回国|校园|游戏|教育|重置|登录|面板|工作室)
 rename=云\s-\s@
 expand=false
 classic=true
@@ -1951,25 +1951,25 @@ set_meta_core() {
 
 set_redir_mod() {
     echo -----------------------------------------------
-    echo -e "1. ${green}Redir${end}模式:    Redir转发TCP，不转发UDP"
-    echo -e "2. ${green}混合${end}模式:     Redir转发TCP，Tun转发UDP"
-    echo -e "3. ${green}Tun${end}模式:      Tun转发TCP和UDP"
-    echo -e "4. ${green}TProxy${end}模式:   TProxy转发TCP和UDP"
+    echo -e "1. ${green}TProxy${end}模式:   TProxy转发TCP和UDP(推荐)"
+    echo -e "2. ${green}Redir${end}模式:    Redir转发TCP，不转发UDP"
+    echo -e "3. ${green}混合${end}模式:     Redir转发TCP，Tun转发UDP"
+    echo -e "4. ${green}Tun${end}模式:      Tun转发TCP和UDP"
     echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
     echo -----------------------------------------------
     read -e -p "请输入对应数字 > " num
     if [ "$num" = 1 ];then
-      setconfig redir_mod Redir模式
+      setconfig redir_mod TProxy模式
       metacfg
     elif [ "$num" = 2 ];then
-      setconfig redir_mod 混合模式
+      setconfig redir_mod Redir模式
       metacfg
     elif [ "$num" = 3 ];then
-      setconfig redir_mod Tun模式
+      setconfig redir_mod 混合模式
       metacfg
     elif [ "$num" = 4 ];then
-      setconfig redir_mod TProxy模式
+      setconfig redir_mod Tun模式
       metacfg
     elif [ "$num" = 0 ];then
       metacfg

@@ -226,7 +226,7 @@ mode: $mode
 $log
 $exper
 ipv6: false
-external-controller: :$db_port
+$external
 external-ui: $db_ui
 secret: $secret
 $tun
