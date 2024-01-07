@@ -24,7 +24,7 @@ proxy-groups:
   - { name: '🇺🇲 美国节点', type: url-test, include-all-providers: true, tolerance: 10, filter: '^(?=.*((?i)🇺🇸|美|US|United States))(?!.*((?i)回国|校园|游戏|教育|久虚|GAME|IPV6|CloudBlades)).*$' }
   - { name: '🇰🇷 韩国节点', type: url-test, include-all-providers: true, tolerance: 10, filter: '^(?=.*((?i)🇰🇷|韩|韓|首尔|KR|Korea))(?!.*((?i)回国|校园|游戏|教育|久虚|GAME|IPV6)).*$' }
   - { name: '🔄 延迟最低', type: url-test, include-all-providers: true }
-  - { name: '🎯 全球直连', type: select, proxies: [direct] }
+  - { name: '🎯 全球直连', type: select, proxies: [DIRECT] }
 rule-anchor:
   ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: yaml}
   domain: &domain {type: http, interval: 86400, behavior: domain, format: yaml}
