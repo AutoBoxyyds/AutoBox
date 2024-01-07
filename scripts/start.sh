@@ -150,7 +150,7 @@ modify_yaml(){
   [ -d $clash_dir/ui ] && db_ui=ui
   #默认TUN配置
   if [ "$redir_mod" = "混合模式" -o "$redir_mod" = "Tun模式" ];then
-    tun="tun: {enable: true, stack: system, device: utun, auto-route: false, auto-detect-interface: false}"
+    tun="tun: {enable: true, stack: mixed, device: utun, auto-route: false, auto-detect-interface: false}"
   else
     tun='tun: {enable: false}'
   fi
