@@ -42,7 +42,7 @@ jobs:
         curl -kfSL -o geodata/Country.mmdb https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb
         curl -kfSL -o geodata/geoip.dat https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
         curl -kfSL -o geodata/geosite.dat https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
-        curl -kfSL -o geodata/cn.txt https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/cn.txt
+        #curl -kfSL -o geodata/cn.txt https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/cn.txt
         curl -kfSL -o geodata/direct-list.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/direct-list.txt
         curl -kfSL -o geodata/reject-list.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/reject-list.txt
         curl -kfSL -o geodata/gfw.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt
