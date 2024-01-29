@@ -65,10 +65,13 @@ sub_bin=$sub_dir/subconverter
 subconverter_version_file=$sub_dir/version_subconverter
 formyairport_path=$sub_dir/profiles/formyairport.ini
 
-######### AdGuardhome #########
+# AdGuardHome目录
 adg_dir=${auto_dir}/adguardhome && [ ! -f $adg_dir ] && mkdir -p $adg_dir
 adg_bin=${adg_dir}/AdGuardHome
 adguardhome_version_file=${adg_dir}/version_adguardhome
+
+# dae目录
+
 
 setconfig(){
     #参数1代表变量名，参数2代表变量值,参数3即文件路径
@@ -374,6 +377,29 @@ WantedBy=multi-user.target
 EOF
 }
 
+set_dae_service() {
+    cat << EOF > /etc/systemd/system/dae.service
+[Unit]
+Description=dae Service
+Documentation=https://github.com/daeuniverse/dae
+After=network-online.target docker.service systemd-sysctl.service
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=root
+LimitNPROC=512
+LimitNOFILE=1048576
+ExecStartPre=/srv/dae/dae validate -c /srv/dae/config.dae
+ExecStart=/srv/dae/dae run --disable-timestamp -c /srv/dae/config.dae
+ExecReload=/srv/dae/dae reload $MAINPID
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
 install_meta () {
     getcpucore
     meta_download_url="${update_url}/bin/Meta-release/meta-${cpucore}"
@@ -556,7 +582,7 @@ download_geoip () {
     fi
     [ -f "${bindir}/GeoIP.dat" ] && rm -rf "${bindir}/GeoIP.dat"
     mv /tmp/geoip.dat ${bindir}/GeoIP.dat
-    [ -f "/usr/share/daed/geoip.dat" ] && rm -rf "/usr/share/daed/geoip.dat" && cp -r "${bindir}/GeoIP.dat" "/usr/share/daed/geoip.dat"
+    [ -f "/usr/share/dae/geoip.dat" ] && rm -rf "/usr/share/dae/geoip.dat" && cp -r "${bindir}/GeoIP.dat" "/usr/share/dae/geoip.dat"
 }
 
 download_geosite () {
@@ -569,7 +595,7 @@ download_geosite () {
     fi
     [ -f "${bindir}/GeoSite.dat" ] && rm -rf "${bindir}/GeoSite.dat"
     mv /tmp/geosite.dat ${bindir}/GeoSite.dat
-    [ -f "/usr/share/daed/geosite.dat" ] && rm -rf "/usr/share/daed/geosite.dat" && cp -r "${bindir}/GeoSite.dat" "/usr/share/daed/geosite.dat"
+    [ -f "/usr/share/dae/geosite.dat" ] && rm -rf "/usr/share/dae/geosite.dat" && cp -r "${bindir}/GeoSite.dat" "/usr/share/dae/geosite.dat"
 }
 
 install_mosdns() {
@@ -827,6 +853,46 @@ download_adguardhome_config () {
       echo -e "${red}Failed to download AdGuardHome AdGuardHome.yaml${end}"
       exit 1
     fi
+}
+
+install_dae () {
+    getcpucore
+    dae_download_url="${update_url}/bin/Dae-release/dae-${cpucore}"
+    remote_dae_version="$(wget -qO- ${url_cdn}${update_url}/bin/version | grep Dae-release_v | awk -F'=' '{ print $2 }')"
+    echo -e "${green}Start download dae release from ${dae_download_url}${end}" 
+    webget2 /tmp/dae ${url_cdn}${dae_download_url}
+    rm -rf ${dae_bin}
+    mv /tmp/dae ${dae_bin}
+    chmod +x ${dae_bin}
+    if [ ! -f "${dae_version_file}" ]; then
+      echo 0 > ${dae_version_file}
+    fi
+    echo ${remote_dae_version} > ${dae_version_file}
+    if [ ! -f /etc/systemd/system/dae.service ]; then
+      set_dae_service
+      systemctl daemon-reload >> /dev/null 2>&1
+      systemctl start dae.service >> /dev/null 2>&1
+      systemctl enable dae >> /dev/null 2>&1
+    fi
+    echo -e "${yellow}dae release successfully installed${end}"
+}
+  
+update_dae_core() {
+    local_dae_version=$(cat "${dae_version_file}")
+    # local_dae_version=$(${dae_bin} -v | awk 'NR==1{print $3}')
+    remote_dae_version=$(cat ${auto_dir}/version  | grep Dae-release_v | awk -F'=' '{ print $2 }')
+    echo -e "${green}Local dae release: ${local_dae_version}.${end}"
+    if (verlt "${local_dae_version}" "${remote_dae_version}") then
+      echo -e "${green}Found a new version of dae ${remote_dae_version}${end}"
+      read -e -p "是否更新？(1/0) > " res
+      [ "$res" = 0 ] && update_menu
+    else
+      echo -e "${green}dae release is up to date${end}"
+      before_show_menu
+    fi
+    install_dae
+    echo -e "${green}dae has been updated${end}"
+    restart_dae
 }
 
 update_shell() {
@@ -1265,14 +1331,14 @@ restart_adguardhome() {
     # fi
 }
 
-restart_daed() {
-    systemctl restart daed >> /dev/null 2>&1
+restart_dae() {
+    systemctl restart dae >> /dev/null 2>&1
     sleep 2
-    check_daed_status
+    check_dae_status
     if [[ $? == 0 ]]; then
-      echo -e "${green}daed服务重启成功!${end}"
+      echo -e "${green}dae服务重启成功!${end}"
     else
-      echo -e "${red}daed服务重启失败!${end}"
+      echo -e "${red}dae服务重启失败!${end}"
     fi
     # if [[ $# == 0 ]]; then
     #   before_show_menu
@@ -1288,7 +1354,7 @@ restart_all() {
     sleep 2
     systemctl restart adguardhome >> /dev/null 2>&1
     sleep 2
-    systemctl restart daed >> /dev/null 2>&1
+    systemctl restart dae >> /dev/null 2>&1
     echo -e "${green}AutoBox 重启成功!${end}"
 }
 
@@ -1328,8 +1394,8 @@ check_adguardhome_status() {
     fi
 }
 
-check_daed_status() {
-    PID=$(pidof daed)
+check_dae_status() {
+    PID=$(pidof dae)
     if [ -n "$PID" ];then
       return 0
     else
@@ -1363,8 +1429,8 @@ getudp(){
 
 linkconfig(){
   echo -----------------------------------------------
-  echo "1  代理集meta版:   META核心"
-  echo "2  自定义模版:     转换成适配的配置文件"
+  echo "1  AutoBox模版"
+  echo "2  自定义模版"
   echo -----------------------------------------------
   echo 0  返回上级菜单
   echo -----------------------------------------------
@@ -1630,7 +1696,7 @@ adguardhome_getconfig(){
       echo -e "4. ${green}重启 ${end}AdGuardHome   "$run",内存占用:${blue}"$VmRSS"${end}"
     else
       if [ "$adg_home" != "已开启" ];then
-        run="${red}未启用${end}"
+        run="${whiteb}未启用${end}"
         echo -e "4. ${green}重启 ${end}AdGuardHome   "$run""
       else
         run="${red}没有运行${end}"
@@ -1639,20 +1705,20 @@ adguardhome_getconfig(){
     fi
 }
 
-daed_getconfig(){
+dae_getconfig(){
     source $CFG_PATH
-    PID=$(pidof daed)
+    PID=$(pidof dae)
     if [ -n "$PID" ];then
       run="${green}已运行${end}"
       VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
-      echo -e "5. ${green}重启 ${end}Daed          "$run",内存占用:${blue}"$VmRSS"${end}"
+      echo -e "5. ${green}重启 ${end}dae           "$run",内存占用:${blue}"$VmRSS"${end}"
     else
-      if [ "$daed" != "已开启" ];then
-        run="${red}未启用${end}"
-        echo -e "5. ${green}重启 ${end}Daed          "$run""
+      if [ "$dae" != "已开启" ];then
+        run="${whiteb}未启用${end}"
+        echo -e "5. ${green}重启 ${end}dae           "$run""
       else
         run="${red}没有运行${end}"
-        echo -e "5. ${green}重启 ${end}Daed          "$run""
+        echo -e "5. ${green}重启 ${end}dae           "$run""
       fi
     fi
 }
@@ -1666,9 +1732,9 @@ getconfig2(){
     check_disk_status
     check_CFG_PATH
     echo -e "${purple}Meta${end}控制面板:${lightblue}    http://${local_ip}:${db_port}/ui/${end}"
-    check_daed_status
+    check_dae_status
     if [[ $? == 0 ]]; then
-    echo -e "${purple}Daed${end}面板:${lightblue}        http://${local_ip}:2023${end}"
+    echo -e "${purple}dae${end}面板:${lightblue}        http://${local_ip}:2023${end}"
     fi
     echo -----------------------------------------------
 }
@@ -1680,7 +1746,7 @@ show_menu() {
     mosdns_getconfig
     subconverter_getconfig
     adguardhome_getconfig
-    daed_getconfig
+    dae_getconfig
     echo -----------------------------------------------
     echo -e "6. ${green}导入 ${end}Meta配置文件"
     echo -e "7. ${green}设置 ${end}Meta功能"
@@ -1710,7 +1776,7 @@ show_menu() {
       restart_adguardhome
       before_show_menu
     elif [ "$num" = 5 ]; then
-      restart_daed
+      restart_dae
       before_show_menu
     elif [ "$num" = 6 ]; then
       getlink_menu
@@ -2049,9 +2115,9 @@ setup_menu() {
     echo -----------------------------------------------
     echo -e "\033[30;43m欢迎使用AutoBox功能设置菜单${end}"
     echo -----------------------------------------------
-    check_daed_status
+    check_dae_status
     if [[ $? == 0 ]]; then
-    echo -e "${yellow}daed:${end}        http://${local_ip}:2023" 
+    echo -e "${yellow}dae:${end}        http://${local_ip}:2023" 
     echo -e "${yellow}用户名:${end}      AutoBox"
     echo -e "${yellow}密码:${end}        AutoBox2023"
     echo -----------------------------------------------
@@ -2060,7 +2126,7 @@ setup_menu() {
     echo -----------------------------------------------
     echo -e "1. ${green}设置 ${end}定时:           ${lightblue}定时更新或重启${end}"
     echo -e "2. ${green}更换 ${end}Mosdns版本:     ${lightblue}$mosdns_ver${end}"
-    echo -e "3. ${green}启用 ${end}Daed:           ${lightblue}$daed${end}"
+    echo -e "3. ${green}启用 ${end}dae:           ${lightblue}$dae${end}"
     echo -e "4. ${green}启用 ${end}AdGuardHome:    ${lightblue}$adg_home${end}"
     echo -e "5. ${green}修改 ${end}本机地址:       ${lightblue}${local_ip}${end}"
     echo -e "6. ${green}修改 ${end}下载地址:       ${lightblue}$update_git${end}"
@@ -2078,7 +2144,7 @@ setup_menu() {
       2)  set_dns_server
           setup_menu
     ;;
-      3)  set_daed
+      3)  set_dae
           setup_menu 
     ;;
       4)  set_adg_home
@@ -2139,65 +2205,45 @@ set_dns_server() {
     fi
 }
 
-set_daed() {
+set_dae() {
     source $CFG_PATH
     echo -----------------------------------------------
-    if [ "$daed" = "未启用" ];then
-      daed=已开启
+    if [ "$dae" = "未启用" ];then
+      dae=已开启
     else
-      daed=未启用
+      dae=未启用
     fi
-    setconfig daed $daed
-    if [ "$daed" != "已开启" ];then
-      systemctl stop daed >> /dev/null 2>&1
-      systemctl disable daed >> /dev/null 2>&1
+    setconfig dae $dae
+    if [ "$dae" != "已开启" ];then
+      systemctl stop dae >> /dev/null 2>&1
+      systemctl disable dae >> /dev/null 2>&1
       systemctl daemon-reload >> /dev/null 2>&1
       systemctl restart clash >> /dev/null 2>&1
     else
-      if [ ! -d "/etc/daed" ]; then
-        echo -e "${green}正在安装daed...${end}"
-        install_daed
+      if [ ! -d "/etc/dae" ]; then
+        echo -e "${green}正在安装dae...${end}"
+        install_dae
       fi 
-    systemctl restart daed >> /dev/null 2>&1
-    systemctl enable daed >> /dev/null 2>&1
+    systemctl restart dae >> /dev/null 2>&1
+    systemctl enable dae >> /dev/null 2>&1
     systemctl restart clash >> /dev/null 2>&1
     fi
     echo -e "\033[32m设置成功！\033[0m"
 }
 
-install_daed() {
-    if [ "$update_git" != "原作者GitHub" ];then
-      daed_download_url="${update_url}/bin/daed/installer-daed-linux-$(arch).deb"
-    else    
-      daed_download_url=https://github.com/daeuniverse/daed/releases/download/v0.4.0rc1/installer-daed-linux-$(arch).deb
-      if [ "${daed_download_url}" == "" ]; then
-          echo -e "${red}No compatible daed for your platform.${end}"
-          exit 1
-      fi
-    fi
-    echo -e "${green}Start download daed from ${daed_download_url}${end}" 
-    webget2 /tmp/installer-daed-linux-$(arch).deb ${url_cdn}${daed_download_url}
-    dpkg -i /tmp/installer-daed-linux-$(arch).deb
-    rm /tmp/installer-daed-linux-$(arch).deb
-    systemctl start daed
-    systemctl enable daed
-    download_daed_db
-    systemctl restart daed
-}
-
-download_daed_db () {
+download_dae_db () {
     if [ "$update_git" != "原作者GitHub" ];then
       config_download_url="${update_url}/file/wing.db"
     else
       config_download_url="https://raw.githubusercontent.com/autoboxyyds/AutoBox/main/file/wing.db"
     fi
-    echo -e "${green}Start download daed.db from ${config_download_url}${end}" 
+    echo -e "${green}Start download dae.db from ${config_download_url}${end}" 
     webget2  /tmp/wing.db  ${url_cdn}${config_download_url}
     if [ -f "/tmp/wing.db" ]; then
-      [ -f "/etc/daed/wing.db" ] && rm -rf "/etc/daed/wing.db"
-      mv /tmp/wing.db /etc/daed/wing.db
+      [ -f "/etc/dae/wing.db" ] && rm -rf "/etc/dae/wing.db"
+      mv /tmp/wing.db /etc/dae/wing.db
     else
-      echo -e "${red}Failed to download d daed.db${end}"
+      echo -e "${red}Failed to download d dae.db${end}"
       exit 1
     fi
 }
@@ -2208,7 +2254,7 @@ update_AutoBox_config() {
     echo -e "1. ${green}重置 ${end}Mosdns配置文件"
     echo -e "2. ${green}重置 ${end}EasyMosdns配置文件"
     echo -e "3. ${green}重置 ${end}AdGuardHome配置文件"
-    echo -e "4. ${green}重置 ${end}daed配置文件"
+    echo -e "4. ${green}重置 ${end}dae配置文件"
     echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
     echo -----------------------------------------------
@@ -2223,8 +2269,8 @@ update_AutoBox_config() {
       download_adguardhome_config
       set_adg_home_mosdns
     elif [ "$num" = 4 ];then
-      download_daed_db
-      restart_daed
+      download_dae_db
+      restart_dae
     elif [ "$num" = 0 ];then
       update_menu
     else
@@ -2272,7 +2318,7 @@ update_meta_dashboard () {
 update_AutoBox_file() {
     echo -----------------------------------------------
     echo -e "1. ${green}更新 ${end}Country数据库"
-    echo -e "2. ${green}更新 ${end}GeoIP/GeoSite数据库(Meta内核/Daed)"
+    echo -e "2. ${green}更新 ${end}GeoIP/GeoSite数据库(Meta内核/dae)"
     echo -e "3. ${green}更新 ${end}Mosdns分流文件"
     echo -e "4. ${green}更新 ${end}Nftables的CN_IP绕过文件"
     echo -e "5. ${green}全部更新 ${end}"
@@ -2425,10 +2471,10 @@ uninstall() {
     rm -rf ${adg_bin}.old
     rm -rf ${adg_dir}
 
-    systemctl stop daed >> /dev/null 2>&1
-    systemctl disable daed >> /dev/null 2>&1
-    rm -rf /etc/daed
-    rm -rf /usr/share/daed
+    systemctl stop dae >> /dev/null 2>&1
+    systemctl disable dae >> /dev/null 2>&1
+    rm -rf /etc/dae
+    rm -rf /usr/share/dae
 
     rm -rf $clash_configs_dir
 
