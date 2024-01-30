@@ -268,9 +268,9 @@ install_debian() {
     rm -rf /etc/apt/sources.list.d/*
 
     cat << EOF > /etc/apt/sources.list
-deb https://mirrors.tuna.tsinghua.edu.cn/debian $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1) main
-deb https://mirrors.tuna.tsinghua.edu.cn/debian-security $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1)/updates main
-deb https://mirrors.tuna.tsinghua.edu.cn/debian $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1)-updates main
+deb http://mirror.sjtu.edu.cn/debian $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1) main contrib non-free non-free-firmware
+deb http://mirror.sjtu.edu.cn/debian-security $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1)-security main contrib non-free non-free-firmware
+deb http://mirror.sjtu.edu.cn/debian $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1)-updates main contrib non-free non-free-firmware
 EOF
     echo -e "${green}升级系统,请稍候! 大概5-10分钟!${end}" 
     apt update >> /dev/null 2>&1
